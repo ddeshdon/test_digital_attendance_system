@@ -4,14 +4,15 @@
   "description": "Digital Attendance System - Instructor Dashboard",
   "private": true,
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "antd": "^5.10.0",
     "@ant-design/icons": "^5.2.6",
+    "ajv": "^8.12.0",
+    "antd": "^5.10.0",
     "axios": "^1.5.0",
     "moment": "^2.29.4",
     "qrcode.react": "^3.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
     "web-vitals": "^3.4.0"
   },
   "scripts": {
@@ -43,6 +44,12 @@
     "@testing-library/jest-dom": "^6.1.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3"
+  },
+  "resolutions": {
+    "ajv": "8.12.0"
+  },
+  "overrides": {
+    "ajv": "8.12.0"
   },
   "proxy": "http://localhost:5000"
 }
