@@ -37,7 +37,7 @@ Tech Stack
 - **Deployment**: AWS Academy Learner Lab
 - **Testing**: Jest + Cypress + pytest
 
-## 📁 Project Structure
+##  Project Structure
 ```
 digital_attendance_system/
 ├── frontend/
