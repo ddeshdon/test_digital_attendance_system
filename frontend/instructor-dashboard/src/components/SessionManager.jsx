@@ -3,7 +3,7 @@ import { Card, Form, Input, Button, InputNumber, Alert, Space, message } from 'a
 import { PlayCircleOutlined, StopOutlined, CopyOutlined } from '@ant-design/icons';
 import { sessionAPI } from '../services/api';
 
-const SessionManager = ({ onSessionChange }) => {
+const SessionManager = ({ onSessionChange, selectedClass }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
@@ -77,7 +77,7 @@ const SessionManager = ({ onSessionChange }) => {
     const timeRemaining = Math.max(0, Math.ceil((new Date(session.end_time) - new Date()) / 60000));
 
     return (
-      <Card title="📡 Active Attendance Session" style={{ marginBottom: 24 }}>
+      <Card title="Active Attendance Session" style={{ marginBottom: 24 }}>
         <Alert
           message={isExpired ? "Session has expired!" : "Session is now active!"}
           description={
@@ -104,7 +104,7 @@ const SessionManager = ({ onSessionChange }) => {
               )}
               <p><strong>Status:</strong> 
                 <span style={{ color: isExpired ? '#ff4d4f' : '#52c41a' }}>
-                  {isExpired ? '❌ EXPIRED' : '✅ OPEN'}
+                  {isExpired ? 'EXPIRED' : 'OPEN'}
                 </span>
               </p>
             </div>
@@ -137,18 +137,21 @@ const SessionManager = ({ onSessionChange }) => {
   }
 
   return (
-    <Card title="🚀 Start Attendance Session" style={{ marginBottom: 24 }}>
+      <Card title="Start Attendance Session" style={{ marginBottom: 24 }}>
       <Alert
-        message="Setup Instructions:"
+        message="Setup Instructions"
         description={
-          <ol style={{ marginBottom: 0, paddingLeft: '20px' }}>
-            <li>Open <strong>Beacon Simulator</strong> app on your iPhone/iPad</li>
-            <li>Copy the UUID from the app (use the share button)</li>
-            <li>Paste it in the Beacon UUID field below</li>
-            <li>Fill in class and room details</li>
-            <li>Set attendance window duration</li>
-            <li>Click Start to begin attendance session</li>
-          </ol>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Open Beacon Simulator</div>
+            <div style={{ fontSize: 20, color: '#6B7280' }}>→</div>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Copy UUID (share)</div>
+            <div style={{ fontSize: 20, color: '#6B7280' }}>→</div>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Paste UUID in field below</div>
+            <div style={{ fontSize: 20, color: '#6B7280' }}>→</div>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Set class/room & window</div>
+            <div style={{ fontSize: 20, color: '#6B7280' }}>→</div>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Start session</div>
+          </div>
         }
         type="info"
         showIcon
@@ -161,9 +164,9 @@ const SessionManager = ({ onSessionChange }) => {
         onFinish={startSession}
         initialValues={{ 
           attendanceWindow: 5,
-          classId: 'DES424',
-          roomId: 'R602',
-          beaconUUID: 'D001A2B6-AA1F-4860-9E43-FC83C418FC58'
+          classId: selectedClass?.code || 'DES424',
+          roomId: selectedClass?.room || 'BKD 3507',
+          beaconUUID: ''
         }}
         size="large"
       >
@@ -235,8 +238,8 @@ const SessionManager = ({ onSessionChange }) => {
       </Form>
 
       <Alert
-        message="💡 Pro Tip"
-        description="Make sure your Beacon Simulator is broadcasting before starting the session. Students will scan for this exact UUID to mark attendance."
+        message="Pro Tip"
+        description={<div style={{ color: '#000' }}>Make sure your Beacon Simulator is broadcasting before starting the session. Students will scan for this exact UUID to mark attendance.</div>}
         type="warning"
         showIcon
         style={{ marginTop: 16 }}

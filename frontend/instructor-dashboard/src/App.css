@@ -6,7 +6,8 @@
 
 .layout {
   min-height: 100vh;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(107, 33, 168, 0.4) 100%);
+  /* reduced purple overlay to make background clearer */
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(107, 33, 168, 0.12) 100%);
   position: relative;
 }
 
@@ -34,8 +35,8 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(107, 33, 168, 0.08) 0%, transparent 50%);
+    radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(107, 33, 168, 0.04) 0%, transparent 50%);
   pointer-events: none;
   z-index: 1;
 }
@@ -47,10 +48,11 @@
   width: 100%;
   display: flex;
   align-items: center;
-  background: linear-gradient(90deg, rgba(107, 33, 168, 0.75) 0%, rgba(124, 58, 237, 0.75) 100%) !important;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 4px 20px rgba(107, 33, 168, 0.15);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  /* solid purple header */
+  background: #6c2a81 !important;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(107, 33, 168, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .ant-layout-content {
@@ -60,19 +62,18 @@
 
 /* SIIT Logo Styling */
 .siit-logo {
-  height: 45px;
+  height: 56px;
   width: auto;
-  margin-right: 16px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  margin-right: 18px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
 }
 
 .header-title {
-  color: white !important;
+  color: #fff !important;
   margin: 0 !important;
-  font-size: 24px !important;
-  font-weight: 600 !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  letter-spacing: 0.5px;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2px;
 }
 
 .ant-table-thead > tr > th {
@@ -197,16 +198,27 @@
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  color: white !important;
+  color: #000 !important;
+}
+
+/* Header text should be white */
+.ant-layout-header h1,
+.ant-layout-header h2, 
+.ant-layout-header h3,
+.ant-layout-header .ant-typography,
+.ant-layout-header .ant-typography h1,
+.ant-layout-header .ant-typography h2,
+.ant-layout-header .ant-typography h3,
+.ant-layout-header span {
+  color: #fff !important;
 }
 
 .ant-typography h1, .ant-typography h2, .ant-typography h3 {
-  color: white !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #000 !important;
 }
 
 .ant-typography {
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: rgba(0, 0, 0, 0.95) !important;
 }
 
 /* Beacon UUID display styling */
@@ -375,21 +387,18 @@ code {
   text-align: center;
   margin-bottom: 32px;
   padding: 32px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.04) 0%, rgba(107, 33, 168, 0.04) 100%);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.02) 0%, rgba(107, 33, 168, 0.02) 100%);
   border-radius: 20px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(124, 58, 237, 0.06);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(0,0,0,0.04);
 }
 
 .dashboard-title {
-  background: linear-gradient(135deg, #374151 0%, #4B5563 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 32px !important;
-  font-weight: 700 !important;
+  color: #000 !important;
+  font-size: 34px !important;
+  font-weight: 800 !important;
   margin: 0 !important;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
 
 .dashboard-subtitle {
@@ -404,9 +413,9 @@ code {
 
 /* Professional section headers */
 .section-title {
-  color: #374151 !important;
+  color: #000 !important;
   font-size: 22px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   margin-bottom: 24px !important;
   position: relative;
   padding-left: 16px;
@@ -465,10 +474,10 @@ code {
 }
 
 .setup-step-title {
-  color: #374151 !important;
-  font-weight: 600 !important;
+  color: #000 !important;
+  font-weight: 700 !important;
   margin-bottom: 8px !important;
-  font-size: 14px !important;
+  font-size: 15px !important;
   line-height: 1.4;
 }
 
@@ -479,5 +488,5 @@ code {
 }
 
 .setup-step-description strong {
-  color: rgba(124, 58, 237, 0.9) !important;
+  color: #000 !important;
 }
