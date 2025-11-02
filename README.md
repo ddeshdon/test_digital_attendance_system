@@ -1,21 +1,21 @@
 # Digital Attendance System - Beacon-Based
 
-## 🎯 Project Overview
+Project Overview
 A cloud-based attendance system that uses Bluetooth beacons to verify student presence in specific classrooms. The system prevents attendance fraud by ensuring students are physically present near the classroom beacon.
 
-## 📋 System Flow
+System Flow
 1. **Professor** starts session using Beacon Simulator app UUID
 2. **Students** scan for beacon or enter session code manually
 3. **Backend** matches UUIDs and time windows to mark attendance
 4. **Dashboard** shows real-time attendance monitoring
 
-## 🏗️ Architecture
+Architecture
 - **Frontend**: React.js (Instructor Dashboard) + React Native (Student App)
 - **Backend**: Python Flask/FastAPI with AWS Lambda
 - **Database**: AWS DynamoDB for real-time data + PostgreSQL for analytics
 - **Cloud**: AWS (API Gateway, Lambda, DynamoDB, S3, CloudFront)
 
-## 📱 Demo Setup
+Demo Setup
 ### Professor Setup:
 1. Open **Beacon Simulator** app on iPhone/iPad
 2. Copy the generated UUID
@@ -29,7 +29,7 @@ A cloud-based attendance system that uses Bluetooth beacons to verify student pr
 3. OR tap "Manual Entry" and paste UUID
 4. Confirm attendance marking
 
-## 🚀 Tech Stack
+Tech Stack
 - **Web Dashboard**: React.js + Ant Design + TypeScript
 - **Mobile App**: React Native + Expo
 - **Backend**: Python + Flask/FastAPI
@@ -49,22 +49,5 @@ digital_attendance_system/
 └── deployment/                # AWS deployment scripts
 ```
 
-## 🎓 Academic Requirements Covered
-✅ Real cloud deployment on AWS  
-✅ Beacon-based location verification  
-✅ Real-time attendance monitoring  
-✅ GitHub repository with documentation  
-✅ Performance testing and evaluation  
-✅ Complete presentation materials  
-
-## 🛠️ Development Setup
+## Development Setup
 See individual README files in each component directory for setup instructions.
-
-## 📊 Demo Data
-- **Class**: DES424
-- **Room**: R602  
-- **Sample Beacon UUID**: D001A2B6-AA1F-4860-9E43-FC83C418FC58
-- **Student ID**: 6522781713
-
----
-**Built for Academic Capstone Project - Digital Engineering Systems**
