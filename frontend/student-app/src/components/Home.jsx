@@ -7,43 +7,50 @@ const classes = [
     code: 'CSS322',
     name: 'Scientific Computing',
     day: 'Thursday',
-    time: '13:00 - 16:00'
+    time: '13:00 - 16:00',
+    room: 'BKD2501',
   },
   {
     code: 'DES201',
     name: 'Discrete Mathematics',
     day: 'Thursday',
-    time: '9:00 - 12:00'
+    time: '9:00 - 12:00',
+    room: 'RS 1-409',
   },
   {
     code: 'TU100',
     name: 'Civic Engagement',
     day: 'Friday',
-    time: '13:00 - 16:00'
+    time: '13:00 - 16:00',
+    room: 'RS 1-503',
   },
   {
     code: 'DES424',
     name: 'Cloud-based Application Development',
     day: 'Wednesday',
-    time: '9:00 - 12:00'
+    time: '9:00 - 12:00',
+    room: 'BKD 3507',
   },
   {
     code: 'TU109',
     name: 'Innovation and Entrepreneurial mindset',
     day: 'Tuesday',
-    time: '9:00 - 12:00'
+    time: '9:00 - 12:00',
+    room: 'RS 3305',
   },
   {
     code: 'DES423',
     name: 'Applied Machine Learning and AI',
     day: 'Monday',
-    time: '13:00 - 16:00'
+    time: '13:00 - 16:00',
+    room: 'BKD 3204',
   },
   {
     code: 'DES427',
     name: 'Mobile Application Programming',
     day: 'Monday',
-    time: '13:00 - 16:00'
+    time: '13:00 - 16:00',
+    room: 'RBKD 3202',
   }
 ];
 
@@ -71,6 +78,7 @@ export default function Home() {
         name: classItem.name,
         day: classItem.day,
         time: classItem.time,
+        room: classItem.room,
       }
     });
   };
