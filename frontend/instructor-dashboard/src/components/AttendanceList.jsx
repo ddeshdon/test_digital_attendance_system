@@ -116,7 +116,7 @@ const AttendanceList = ({ session }) => {
 
   if (!session) {
     return (
-      <Card title="📊 Live Attendance">
+      <Card title="Live Attendance">
         <Alert
           message="No Active Session"
           description="Please start a session to view attendance."
@@ -131,7 +131,7 @@ const AttendanceList = ({ session }) => {
 
   return (
     <Card 
-      title="📊 Live Attendance"
+      title="Live Attendance"
       extra={
         <Space>
           <Button 
