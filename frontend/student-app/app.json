@@ -1,51 +1,29 @@
 {
   "expo": {
-    "name": "Student Attendance App",
-    "slug": "student-attendance-app",
+    "name": "student-app-new",
+    "slug": "student-app-new",
     "version": "1.0.0",
-    "sdkVersion": "54.0.0",
     "orientation": "portrait",
-
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSBluetoothAlwaysUsageDescription": "This app uses Bluetooth to detect classroom beacons for attendance marking.",
-        "NSBluetoothPeripheralUsageDescription": "This app uses Bluetooth to detect classroom beacons for attendance marking.",
-        "NSLocationWhenInUseUsageDescription": "This app uses location services to improve beacon detection accuracy."
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION", 
-        "BLUETOOTH",
-        "BLUETOOTH_ADMIN",
-        "BLUETOOTH_CONNECT",
-        "BLUETOOTH_SCAN"
-      ]
+      "edgeToEdgeEnabled": true
     },
     "web": {
-      "bundler": "metro",
-      "output": "static"
-
-    },
-    "plugins": [
-      "expo-router"
-    ],
-    "experiments": {
-      "typedRoutes": true
+      "favicon": "./assets/favicon.png"
     }
   }
 }

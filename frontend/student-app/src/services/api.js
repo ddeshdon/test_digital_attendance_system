@@ -1,8 +1,10 @@
 // API Service for Student App
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://your-api-id.execute-api.us-east-1.amazonaws.com/prod';
-// For development, use local server: 'http://localhost:5000/api'
+// COMMENTED OUT FOR TESTING - AWS API Gateway endpoint requires deployment
+// const API_BASE_URL = 'https://your-api-id.execute-api.us-east-1.amazonaws.com/prod';
+// For development/testing, use local server:
+const API_BASE_URL = 'http://localhost:5000/api';
 
 class StudentAPIService {
   constructor() {
