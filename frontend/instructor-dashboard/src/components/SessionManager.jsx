@@ -238,7 +238,6 @@ const SessionManager = ({ onSessionChange, selectedClass }) => {
       </Form>
 
       <Alert
-        message="Pro Tip"
         description={<div style={{ color: '#000' }}>Make sure your Beacon Simulator is broadcasting before starting the session. Students will scan for this exact UUID to mark attendance.</div>}
         type="warning"
         showIcon

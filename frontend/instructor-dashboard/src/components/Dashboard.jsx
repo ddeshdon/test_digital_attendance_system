@@ -174,8 +174,8 @@ const Dashboard = ({ instructor, onLogout }) => {
         alignItems: 'center', 
         justifyContent: 'space-between',
         padding: '8px 50px',
-        backgroundColor: '#705379ff',
-        background: '#705379ff'
+        backgroundColor: '#8e4ad1ff',
+        background: '#8e4ad1ff'
       }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <img 
@@ -184,7 +184,7 @@ const Dashboard = ({ instructor, onLogout }) => {
             className="siit-logo"
           />
           <Title style={{ 
-            color: '#fff !important',
+            color: '#fff ',
             margin: 0,
             fontSize: '26px',
             fontWeight: 700,
@@ -201,7 +201,7 @@ const Dashboard = ({ instructor, onLogout }) => {
               Welcome, {instructor.name}
             </Text>
             {/* simple logout button instead of profile dropdown */}
-            <Button type="default" onClick={() => { message.success('Logged out successfully'); onLogout(); }}>
+            <Button type="default" style={{ color: '#000' }} onClick={() => { message.success('Logged out successfully'); onLogout(); }}>
               Logout
             </Button>
           </Space>

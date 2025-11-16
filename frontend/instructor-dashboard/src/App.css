@@ -49,7 +49,7 @@
   display: flex;
   align-items: center;
   /* solid purple header */
-  background: #6c2a81 !important;
+  background: #B266FF !important;
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 20px rgba(107, 33, 168, 0.08);
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
