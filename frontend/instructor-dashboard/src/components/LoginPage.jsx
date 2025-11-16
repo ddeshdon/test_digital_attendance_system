@@ -104,12 +104,18 @@ const LoginPage = ({ onLogin }) => {
               <div>
                 <Title level={1} style={{ 
                   color: '#000',
-                  margin: 5, 
+                  margin: 0, 
                   fontSize: '40px'
                 }}>
-                  Digital Attendance System
+                  Digital Attendance
                 </Title>
-                
+                <Title level={4} style={{ 
+                  color: '#000', 
+                  margin: 0, 
+                  fontWeight: 400,
+                }}>
+                  System
+                </Title>
               </div>
             </div>
 
