@@ -184,7 +184,7 @@ const Dashboard = ({ instructor, onLogout }) => {
             className="siit-logo"
           />
           <Title style={{ 
-            color: '#fff ',
+            color: '#fff !important',
             margin: 0,
             fontSize: '26px',
             fontWeight: 700,
