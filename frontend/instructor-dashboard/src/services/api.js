@@ -130,6 +130,7 @@ export const attendanceAPI = {
     const api = new APIService();
     const response = await api.request(`/attendance/export/${sessionId}`);
 
+    /*
     // Generate CSV data
     const csvData = response.records.map((record) => [
       record.student_id,
@@ -139,9 +140,6 @@ export const attendanceAPI = {
       record.check_in_method,
       record.beacon_distance || "N/A",
     ]);
-
-    // Backend already generates CSV data so just return it
-    return { csvData: response.csvData };
 
     const headers = [
       "Student ID",
@@ -154,8 +152,10 @@ export const attendanceAPI = {
     const csvContent = [headers, ...csvData]
       .map((row) => row.join(","))
       .join("\n");
+    */
 
-    return { csvData: csvContent };
+    // Backend already generates CSV data so just return it
+    return { csvData: response.csvData };
   },
 
   checkIn: async ({ student_id, beacon_uuid }) => {
