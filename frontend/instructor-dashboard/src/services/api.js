@@ -1,7 +1,14 @@
+import API_CONFIG from "./config";
+
+const API_BASE_URL = API_CONFIG.USE_LOCAL
+  ? API_CONFIG.LOCAL_API_URL
+  : API_CONFIG.PRODUCTION_API_URL;
+
 // API Service Layer for Instructor Dashboard
-const API_BASE_URL =
+/*const API_BASE_URL =
   process.env.REACT_APP_API_URL ||
   "https://your-api-id.execute-api.us-east-1.amazonaws.com/prod";
+*/
 
 class APIService {
   constructor() {
