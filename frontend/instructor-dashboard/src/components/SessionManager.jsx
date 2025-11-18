@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Form, Input, Button, InputNumber, Alert, Space, message } from 'antd';
 import { PlayCircleOutlined, StopOutlined, CopyOutlined } from '@ant-design/icons';
-import { sessionAPI } from '../services/api';
+import { sessionAPI } from '../services/api-action-based';
 
-const SessionManager = ({ onSessionChange }) => {
+const SessionManager = ({ onSessionChange, selectedClass }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [form] = Form.useForm();
+
+  // Update current time every second for live countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const startSession = async (values) => {
     setLoading(true);
@@ -19,6 +29,7 @@ const SessionManager = ({ onSessionChange }) => {
         session_id: sessionId,
         class_id: values.classId,
         room_id: values.roomId,
+        teacher_id: 'instructor123', // Default instructor ID
         beacon_uuid: values.beaconUUID.trim(),
         attendance_window_minutes: values.attendanceWindow,
         instructor_id: 'instructor123' // Get from auth context in production
@@ -28,19 +39,16 @@ const SessionManager = ({ onSessionChange }) => {
       
       const response = await sessionAPI.startSession(sessionData);
       
-      if (response.success) {
+      console.log('Session API response:', response);
+      
+      if (response.session && response.message === 'session created') {
         setSession(response.session);
         onSessionChange?.(response.session);
-        message.success('Attendance session started successfully!');
-        
-        // Show confirmation
-        message.info(
-          `Session active for ${values.attendanceWindow} minutes. Students can now check in!`,
-          8
-        );
+      } else {
+        console.error('Session creation failed:', response);
+        throw new Error(response.error || response.message || 'Failed to create session');
       }
     } catch (error) {
-      message.error('Failed to start session: ' + error.message);
       console.error('Session start error:', error);
     } finally {
       setLoading(false);
@@ -56,9 +64,8 @@ const SessionManager = ({ onSessionChange }) => {
       setSession(null);
       onSessionChange?.(null);
       form.resetFields();
-      message.success('Session ended successfully!');
     } catch (error) {
-      message.error('Failed to end session: ' + error.message);
+      console.error('Failed to end session:', error.message);
     } finally {
       setLoading(false);
     }
@@ -66,18 +73,22 @@ const SessionManager = ({ onSessionChange }) => {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
-      message.success('Copied to clipboard!');
+      // Clipboard copy successful - no popup
     }).catch(() => {
-      message.error('Failed to copy to clipboard');
+      console.error('Failed to copy to clipboard');
     });
   };
 
   if (session) {
-    const isExpired = new Date() > new Date(session.end_time);
-    const timeRemaining = Math.max(0, Math.ceil((new Date(session.end_time) - new Date()) / 60000));
+    const isExpired = currentTime > new Date(session.end_time);
+    const timeRemainingMs = Math.max(0, new Date(session.end_time) - currentTime);
+    const totalSecondsRemaining = Math.max(0, Math.floor(timeRemainingMs / 1000));
+    const minutesRemaining = Math.floor(totalSecondsRemaining / 60);
+    const secondsRemaining = totalSecondsRemaining % 60;
+    const timeRemaining = Math.max(0, Math.ceil(timeRemainingMs / 60000));
 
     return (
-      <Card title="📡 Active Attendance Session" style={{ marginBottom: 24 }}>
+      <Card title="Active Attendance Session" style={{ marginBottom: 24 }}>
         <Alert
           message={isExpired ? "Session has expired!" : "Session is now active!"}
           description={
@@ -99,12 +110,12 @@ const SessionManager = ({ onSessionChange }) => {
               <p><strong>Ends:</strong> {new Date(session.end_time).toLocaleString()}</p>
               {!isExpired && (
                 <p><strong>Time Remaining:</strong> <span style={{ color: timeRemaining < 2 ? '#ff4d4f' : '#52c41a' }}>
-                  {timeRemaining} minutes
+                  {minutesRemaining}:{String(secondsRemaining).padStart(2, '0')}
                 </span></p>
               )}
               <p><strong>Status:</strong> 
                 <span style={{ color: isExpired ? '#ff4d4f' : '#52c41a' }}>
-                  {isExpired ? '❌ EXPIRED' : '✅ OPEN'}
+                  {isExpired ? 'EXPIRED' : 'OPEN'}
                 </span>
               </p>
             </div>
@@ -137,18 +148,21 @@ const SessionManager = ({ onSessionChange }) => {
   }
 
   return (
-    <Card title="🚀 Start Attendance Session" style={{ marginBottom: 24 }}>
+      <Card title="Start Attendance Session" style={{ marginBottom: 24 }}>
       <Alert
-        message="Setup Instructions:"
+        message="Setup Instructions"
         description={
-          <ol style={{ marginBottom: 0, paddingLeft: '20px' }}>
-            <li>Open <strong>Beacon Simulator</strong> app on your iPhone/iPad</li>
-            <li>Copy the UUID from the app (use the share button)</li>
-            <li>Paste it in the Beacon UUID field below</li>
-            <li>Fill in class and room details</li>
-            <li>Set attendance window duration</li>
-            <li>Click Start to begin attendance session</li>
-          </ol>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Open Beacon Simulator</div>
+            <div style={{ fontSize: 20, color: '#6B7280' }}>→</div>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Copy UUID (share)</div>
+            <div style={{ fontSize: 20, color: '#6B7280' }}>→</div>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Paste UUID in field below</div>
+            <div style={{ fontSize: 20, color: '#6B7280' }}>→</div>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Set class/room & window</div>
+            <div style={{ fontSize: 20, color: '#6B7280' }}>→</div>
+            <div style={{ padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #eee' }}>Start session</div>
+          </div>
         }
         type="info"
         showIcon
@@ -161,9 +175,9 @@ const SessionManager = ({ onSessionChange }) => {
         onFinish={startSession}
         initialValues={{ 
           attendanceWindow: 5,
-          classId: 'DES424',
-          roomId: 'R602',
-          beaconUUID: 'D001A2B6-AA1F-4860-9E43-FC83C418FC58'
+          classId: selectedClass?.code || 'DES424',
+          roomId: selectedClass?.room || 'BKD 3507',
+          beaconUUID: ''
         }}
         size="large"
       >
@@ -235,8 +249,7 @@ const SessionManager = ({ onSessionChange }) => {
       </Form>
 
       <Alert
-        message="💡 Pro Tip"
-        description="Make sure your Beacon Simulator is broadcasting before starting the session. Students will scan for this exact UUID to mark attendance."
+        description={<div style={{ color: '#000' }}>Make sure your Beacon Simulator is broadcasting before starting the session. Students will scan for this exact UUID to mark attendance.</div>}
         type="warning"
         showIcon
         style={{ marginTop: 16 }}

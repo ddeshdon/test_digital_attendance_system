@@ -1,19 +1,7 @@
 import React from 'react';
-import { StyleSheet, View, StatusBar } from "react-native";
-import AttendanceScanner from '../src/components/AttendanceScanner';
+import { Redirect } from 'expo-router';
 
-export default function Page() {
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-      <AttendanceScanner />
-    </View>
-  );
+// Redirect to login page as the first view
+export default function Index() {
+  return <Redirect href="/login" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-});

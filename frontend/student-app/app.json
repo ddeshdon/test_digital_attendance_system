@@ -1,51 +1,44 @@
-{
-  "expo": {
-    "name": "Student Attendance App",
-    "slug": "student-attendance-app",
-    "version": "1.0.0",
-    "sdkVersion": "54.0.0",
-    "orientation": "portrait",
-
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSBluetoothAlwaysUsageDescription": "This app uses Bluetooth to detect classroom beacons for attendance marking.",
-        "NSBluetoothPeripheralUsageDescription": "This app uses Bluetooth to detect classroom beacons for attendance marking.",
-        "NSLocationWhenInUseUsageDescription": "This app uses location services to improve beacon detection accuracy."
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
-      },
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION", 
-        "BLUETOOTH",
-        "BLUETOOTH_ADMIN",
-        "BLUETOOTH_CONNECT",
-        "BLUETOOTH_SCAN"
-      ]
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static"
-
-    },
-    "plugins": [
-      "expo-router"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
-  }
+﻿{
+    "expo":  {
+                 "version":  "1.0.0",
+                 "orientation":  "portrait",
+                 "web":  {
+                             "favicon":  "./assets/favicon.png"
+                         },
+                 "plugins":  [
+                                 "@react-native-async-storage/async-storage"
+                             ],
+                 "android":  {
+                                 "adaptiveIcon":  {
+                                                      "backgroundColor":  "#7c3aed",
+                                                      "foregroundImage":  "./assets/adaptive-icon.png"
+                                                  },
+                                 "package":  "com.siit.digitalattendance"
+                             },
+                 "name":  "SIIT Attendance",
+                 "extra":  {
+                               "cognitoConfig":  {
+                                                     "region":  "us-east-1",
+                                                     "userPoolId":  "us-east-1_nvaJtHDVc",
+                                                     "clientSecret":  "a7n3tncn1eg2av08pgtqbv0ga8r290ftbuqsfiqm45d384dibi2",
+                                                     "webClientId":  "6662k02feufhmo08ue2e141jjk"
+                                                 },
+                               "apiUrl":  "https://kfmseegxyi.execute-api.us-east-1.amazonaws.com/prod"
+                           },
+                 "userInterfaceStyle":  "light",
+                 "ios":  {
+                             "bundleIdentifier":  "com.siit.digitalattendance",
+                             "supportsTablet":  true
+                         },
+                 "slug":  "siit-digital-attendance",
+                 "icon":  "./assets/icon.png",
+                 "splash":  {
+                                "backgroundColor":  "#7c3aed",
+                                "resizeMode":  "contain",
+                                "image":  "./assets/splash.png"
+                            },
+                 "assetBundlePatterns":  [
+                                             "**/*"
+                                         ]
+             }
 }
