@@ -1,29 +1,44 @@
-{
-  "expo": {
-    "name": "student-app-new",
-    "slug": "student-app-new",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    }
-  }
+﻿{
+    "expo":  {
+                 "version":  "1.0.0",
+                 "orientation":  "portrait",
+                 "web":  {
+                             "favicon":  "./assets/favicon.png"
+                         },
+                 "plugins":  [
+                                 "@react-native-async-storage/async-storage"
+                             ],
+                 "android":  {
+                                 "adaptiveIcon":  {
+                                                      "backgroundColor":  "#7c3aed",
+                                                      "foregroundImage":  "./assets/adaptive-icon.png"
+                                                  },
+                                 "package":  "com.siit.digitalattendance"
+                             },
+                 "name":  "SIIT Attendance",
+                 "extra":  {
+                               "cognitoConfig":  {
+                                                     "region":  "us-east-1",
+                                                     "userPoolId":  "us-east-1_nvaJtHDVc",
+                                                     "clientSecret":  "a7n3tncn1eg2av08pgtqbv0ga8r290ftbuqsfiqm45d384dibi2",
+                                                     "webClientId":  "6662k02feufhmo08ue2e141jjk"
+                                                 },
+                               "apiUrl":  "https://kfmseegxyi.execute-api.us-east-1.amazonaws.com/prod"
+                           },
+                 "userInterfaceStyle":  "light",
+                 "ios":  {
+                             "bundleIdentifier":  "com.siit.digitalattendance",
+                             "supportsTablet":  true
+                         },
+                 "slug":  "siit-digital-attendance",
+                 "icon":  "./assets/icon.png",
+                 "splash":  {
+                                "backgroundColor":  "#7c3aed",
+                                "resizeMode":  "contain",
+                                "image":  "./assets/splash.png"
+                            },
+                 "assetBundlePatterns":  [
+                                             "**/*"
+                                         ]
+             }
 }

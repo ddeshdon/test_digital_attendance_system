@@ -1,16 +1,6 @@
 import React from 'react';
-import { Stack } from 'expo-router';
 import Classroom from '../src/components/Classroom';
 
 export default function ClassroomPage() {
-  return (
-    <>
-      <Stack.Screen 
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Classroom />
-    </>
-  );
+  return <Classroom />;
 }

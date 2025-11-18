@@ -15,51 +15,50 @@ class APIService {
     this.baseURL = API_BASE_URL;
   }
 
-  async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
+  async request(action, data = {}) {
+    const payload = {
+      action: action,
+      ...data
+    };
+
     const config = {
+      method: 'POST',
       headers: {
         "Content-Type": "application/json",
-        ...options.headers,
       },
-      ...options,
+      body: JSON.stringify(payload)
     };
 
     try {
-      console.log(
-        `API Request: ${options.method || "GET"} ${url}`,
-        config.body
-      );
+      console.log(`API Request - Action: ${action}`, payload);
+      console.log(`API Base URL: ${this.baseURL}`);
 
-      const response = await fetch(url, config);
-      const data = await response.json();
+      const response = await fetch(this.baseURL, config);
+      const result = await response.json();
 
-      console.log(`API Response:`, data);
+      console.log(`API Response Status: ${response.status}`);
+      console.log(`API Response:`, result);
 
       if (!response.ok) {
         throw new Error(
-          data.message || `HTTP error! status: ${response.status}`
+          result.error || `HTTP error! status: ${response.status}`
         );
       }
 
-      return data;
+      return result;
     } catch (error) {
       console.error("API request failed:", error);
+      console.error("Error details:", error.message);
 
-      // Return mock data for development
-      if (process.env.NODE_ENV === "development") {
-        return this.getMockResponse(endpoint, options.method);
-      }
-
-      throw error;
+      // Don't use mock data in production - throw the actual error
+      throw new Error(`API call failed: ${error.message}`);
     }
   }
 
-  getMockResponse(endpoint, method) {
+  getMockResponse(action) {
     // Mock responses for development
-    if (endpoint === "/session/start" && method === "POST") {
+    if (action === "createSession") {
       return {
-        success: true,
         session: {
           session_id: "DES424-2025-10-29T18-02-30",
           class_id: "DES424",
@@ -70,13 +69,13 @@ class APIService {
           status: "open",
           instructor_id: "instructor123",
         },
+        success: true
       };
     }
 
-    if (endpoint.includes("/attendance/list/")) {
+    if (action === "getAttendanceBySession") {
       return {
-        success: true,
-        records: [
+        attendance: [
           {
             attendance_id: "att_001",
             student_id: "6522781713",
@@ -95,11 +94,11 @@ class APIService {
             check_in_method: "manual_entry",
             beacon_distance: null,
           },
-        ],
+        ]
       };
     }
 
-    return { success: false, message: "Mock endpoint not implemented" };
+    return { success: false, message: "Mock action not implemented" };
   }
 }
 
@@ -107,22 +106,26 @@ class APIService {
 export const sessionAPI = {
   startSession: async (sessionData) => {
     const api = new APIService();
-    return await api.request("/session/start", {
-      method: "POST",
-      body: JSON.stringify(sessionData),
+    return await api.request("createSession", {
+      class_id: sessionData.class_id,
+      teacher_id: sessionData.instructor_id || 'instructor123',
+      beacon_uuid: sessionData.beacon_uuid,
+      attendance_window_minutes: sessionData.attendance_window_minutes || 5
     });
   },
 
   endSession: async (sessionId) => {
     const api = new APIService();
-    return await api.request(`/session/end/${sessionId}`, {
-      method: "PUT",
+    return await api.request("closeSession", {
+      session_id: sessionId
     });
   },
 
   getSessionStatus: async (sessionId) => {
     const api = new APIService();
-    return await api.request(`/session/status/${sessionId}`);
+    return await api.request("getSessionByUUID", {
+      session_id: sessionId
+    });
   },
 };
 
@@ -130,21 +133,24 @@ export const sessionAPI = {
 export const attendanceAPI = {
   getAttendanceList: async (sessionId) => {
     const api = new APIService();
-    return await api.request(`/attendance/list/${sessionId}`);
+    return await api.request("getAttendanceBySession", {
+      session_id: sessionId
+    });
   },
 
   exportAttendance: async (sessionId) => {
     const api = new APIService();
-    const response = await api.request(`/attendance/export/${sessionId}`);
+    const response = await api.request("getAttendanceBySession", {
+      session_id: sessionId
+    });
 
-    /*
-    // Generate CSV data
-    const csvData = response.records.map((record) => [
+    // Generate CSV data from attendance records
+    const csvData = (response.attendance || []).map((record) => [
       record.student_id,
-      record.student_name,
+      record.student_name || 'N/A',
       new Date(record.timestamp).toLocaleString(),
-      record.status,
-      record.check_in_method,
+      record.status || 'present',
+      record.check_in_method || 'beacon_scan',
       record.beacon_distance || "N/A",
     ]);
 
@@ -159,20 +165,15 @@ export const attendanceAPI = {
     const csvContent = [headers, ...csvData]
       .map((row) => row.join(","))
       .join("\n");
-    */
 
-    // Backend already generates CSV data so just return it
-    return { csvData: response.csvData };
+    return { csvData: csvContent };
   },
 
   checkIn: async ({ student_id, beacon_uuid }) => {
     const api = new APIService();
-    return await api.request("/attendance/checkin", {
-      method: "POST",
-      body: JSON.stringify({
-        student_id,
-        beacon_uuid,
-      }),
+    return await api.request("markAttendance", {
+      student_id,
+      beacon_uuid
     });
   },
 };

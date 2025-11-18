@@ -1,5 +1,0 @@
-# Robot Framework Testing Requirements for Frontend Testing
-robotframework==6.1.1
-robotframework-seleniumlibrary==6.2.0
-selenium==4.15.2
-webdriver-manager==4.0.1

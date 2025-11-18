@@ -1,257 +1,211 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Card,
   Table, 
   Select, 
   DatePicker, 
   Button, 
-  Space, 
   Input,
   Row,
   Col,
   Tag,
-  Statistic,
   message,
   Typography,
-  Tooltip
+  Divider
 } from 'antd';
-import { 
-  SearchOutlined, 
+import {
+  SearchOutlined,
   DownloadOutlined,
-  FilterOutlined,
-  FileExcelOutlined,
-  FilePdfOutlined,
-  CalendarOutlined,
-  UserOutlined
+  ReloadOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
+import { attendanceAPI } from '../services/api-action-based';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
-const { Text } = Typography;
+const { Title, Text } = Typography;
 
 const AttendanceHistory = ({ classes }) => {
   const [filteredData, setFilteredData] = useState([]);
+  const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
   const [dateRange, setDateRange] = useState(null);
+  const [exportType, setExportType] = useState('attendance');
 
-  // Mock attendance data with more realistic entries
-  const mockAttendanceData = [
-    {
-      id: 1,
-      sessionId: 'DES424-2025-11-01',
-      classCode: 'DES424',
-      className: 'Cloud-based Application Development',
-      date: '2025-11-01',
-      time: '09:00',
-      room: 'BKD 3507',
-      studentId: '6522781713',
-      studentName: 'John Smith',
-      checkInTime: '09:05:23',
-      status: 'Present'
-    },
-    {
-      id: 2,
-      sessionId: 'DES424-2025-11-01',
-      classCode: 'DES424',
-      className: 'Cloud-based Application Development',
-      date: '2025-11-01',
-      time: '09:00',
-      room: 'BKD 3507',
-      studentId: '6522781714',
-      studentName: 'Jane Doe',
-      checkInTime: '09:03:45',
-      status: 'Present'
-    },
-    {
-      id: 3,
-      sessionId: 'DES424-2025-11-01',
-      classCode: 'DES424',
-      className: 'Cloud-based Application Development',
-      date: '2025-11-01',
-      time: '09:00',
-      room: 'BKD 3507',
-      studentId: '6522781715',
-      studentName: 'Mike Johnson',
-      checkInTime: '09:15:12',
-      status: 'Late'
-    },
-    {
-      id: 4,
-      sessionId: 'DES431-2025-10-29',
-      classCode: 'DES431',
-      className: 'Big Data Analytics',
-      date: '2025-10-29',
-      time: '09:00',
-      room: 'BKD 3507',
-      studentId: '6522781713',
-      studentName: 'John Smith',
-      checkInTime: '09:02:18',
-      status: 'Present'
-    },
-    {
-      id: 5,
-      sessionId: 'DES431-2025-10-29',
-      classCode: 'DES431',
-      className: 'Big Data Analytics',
-      date: '2025-10-29',
-      time: '09:00',
-      room: 'BKD 3507',
-      studentId: '6522781716',
-      studentName: 'Sarah Wilson',
-      checkInTime: null,
-      status: 'Absent'
-    },
-    {
-      id: 6,
-      sessionId: 'ICT760-2025-10-28',
-      classCode: 'ICT760',
-      className: 'Digital Signal Processing and IoT',
-      date: '2025-10-28',
-      time: '09:00',
-      room: 'BKD 3506',
-      studentId: '6522781713',
-      studentName: 'John Smith',
-      checkInTime: '09:01:55',
-      status: 'Present'
-    },
-    {
-      id: 7,
-      sessionId: 'ICT750-2025-10-28',
-      classCode: 'ICT750',
-      className: 'Communication Theory and Connectivity',
-      date: '2025-10-28',
-      time: '13:00',
-      room: 'BKD 3504',
-      studentId: '6522781717',
-      studentName: 'David Brown',
-      checkInTime: '13:08:33',
-      status: 'Present'
-    },
-    {
-      id: 8,
-      sessionId: 'ICT730-2025-10-29',
-      classCode: 'ICT730',
-      className: 'Hardware Concepts for AI and IoT',
-      date: '2025-10-29',
-      time: '13:00',
-      room: 'BKD 2401',
-      studentId: '6522781718',
-      studentName: 'Emily Davis',
-      checkInTime: '13:05:17',
-      status: 'Present'
-    },
-    {
-      id: 9,
-      sessionId: 'ICT710-2025-11-01',
-      classCode: 'ICT710',
-      className: 'Software Concepts for AI and IoT',
-      date: '2025-11-01',
-      time: '13:00',
-      room: 'BKD 3204',
-      studentId: '6522781719',
-      studentName: 'Robert Taylor',
-      checkInTime: '13:12:45',
-      status: 'Late'
-    },
-    {
-      id: 10,
-      sessionId: 'ICT710-2025-11-01',
-      classCode: 'ICT710',
-      className: 'Software Concepts for AI and IoT',
-      date: '2025-11-01',
-      time: '13:00',
-      room: 'BKD 3204',
-      studentId: '6522781720',
-      studentName: 'Lisa Anderson',
-      checkInTime: null,
-      status: 'Absent'
+  // Load real attendance data
+  useEffect(() => {
+    fetchAttendanceHistory();
+  }, []);
+
+  const fetchAttendanceHistory = async () => {
+    setLoading(true);
+    try {
+      const response = await attendanceAPI.getAllAttendance();
+      if (response.attendance) {
+        // Transform the data to match the expected format
+        const transformedData = response.attendance.map((record, index) => {
+          const timestamp = new Date(record.timestamp);
+          
+          // Use local date instead of UTC to avoid timezone issues
+          const year = timestamp.getFullYear();
+          const month = String(timestamp.getMonth() + 1).padStart(2, '0');
+          const day = String(timestamp.getDate()).padStart(2, '0');
+          const dateString = `${year}-${month}-${day}`;
+          
+          console.log('Processing record:', {
+            originalTimestamp: record.timestamp,
+            parsedTimestamp: timestamp,
+            utcDateString: timestamp.toISOString().split('T')[0],
+            localDateString: dateString,
+            classCode: record.class_id
+          });
+          
+          return {
+            id: index + 1,
+            sessionId: record.session_id,
+            classCode: record.class_id || 'Unknown',
+            className: record.class_name || record.class_id || 'Unknown Class',
+            date: dateString,
+            time: timestamp.toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: false 
+            }),
+            room: record.room_id || 'Not Specified',
+            studentId: record.student_id,
+            studentName: getStudentName(record.student_id),
+            checkInTime: timestamp.toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              second: '2-digit',
+              hour12: false 
+            }),
+            status: record.status || 'Present'
+          };
+        });
+        setAttendanceData(transformedData);
+        setFilteredData(transformedData);
+      }
+    } catch (error) {
+      console.error('Failed to load attendance history:', error);
+      message.error('Failed to load attendance history');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  // A small palette to give each class a distinct accent color
-  const palette = ['#6B21A8', '#0ea5e9', '#f97316', '#059669', '#db2777', '#7c3aed', '#ef4444'];
+  // Helper function to get student name
+  const getStudentName = (studentId) => {
+    // For now, just return the student ID as the display name
+    // In production, this would query a student database
+    return `Student ${studentId}`;
+  };
 
-  const getColorForCode = (code) => {
-    if (!code) return palette[0];
-    const idx = code.charCodeAt(0) % palette.length;
-    return palette[idx];
+
+
+  // Simple color mapping for class codes
+  const getClassTagColor = (code) => {
+    const colors = {
+      'DES404': '#1890ff',
+      'DES411': '#52c41a', 
+      'DES424': '#722ed1',
+      'DES431': '#fa8c16'
+    };
+    return colors[code] || '#666666';
   };
 
   useEffect(() => {
     loadAttendanceData();
-  }, [selectedClass, dateRange, searchText]);
+  }, [selectedClass, dateRange, searchText, attendanceData]);
 
   const loadAttendanceData = () => {
-    setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      let filtered = [...mockAttendanceData];
+    console.log('Loading attendance data:', {
+      totalRecords: attendanceData.length,
+      selectedClass,
+      dateRange,
+      searchText
+    });
 
-      // Filter by class
-      if (selectedClass !== 'all') {
-        filtered = filtered.filter(record => record.classCode === selectedClass);
-      }
+    let filtered = [...attendanceData];
 
-      // Filter by date range
-      if (dateRange && dateRange[0] && dateRange[1]) {
-        filtered = filtered.filter(record => {
-          const recordDate = moment(record.date);
-          return recordDate.isBetween(dateRange[0], dateRange[1], 'day', '[]');
+    // Log all record dates first
+    console.log('All record dates:', attendanceData.map(r => r.date));
+
+    // Filter by class
+    if (selectedClass !== 'all') {
+      const beforeClassFilter = filtered.length;
+      filtered = filtered.filter(record => record.classCode === selectedClass);
+      console.log(`Class filter: ${beforeClassFilter} -> ${filtered.length} records`);
+    }
+
+    // Filter by date range
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const beforeDateFilter = filtered.length;
+      
+      console.log('Date range picker values:', {
+        dateRange0: dateRange[0],
+        dateRange1: dateRange[1],
+        dateRange0String: dateRange[0] ? dateRange[0].toString() : 'null',
+        dateRange1String: dateRange[1] ? dateRange[1].toString() : 'null'
+      });
+      
+      filtered = filtered.filter(record => {
+        const recordDate = moment(record.date, 'YYYY-MM-DD');
+        const startDate = moment(dateRange[0]).startOf('day');
+        const endDate = moment(dateRange[1]).endOf('day');
+        
+        // Use isSameOrAfter and isSameOrBefore for more reliable comparison
+        const isAfterStart = recordDate.isSameOrAfter(startDate, 'day');
+        const isBeforeEnd = recordDate.isSameOrBefore(endDate, 'day');
+        const isInRange = isAfterStart && isBeforeEnd;
+        
+        console.log('Date filtering record:', {
+          originalDate: record.date,
+          recordDate: recordDate.format('YYYY-MM-DD'),
+          startDate: startDate.format('YYYY-MM-DD'),
+          endDate: endDate.format('YYYY-MM-DD'),
+          isAfterStart,
+          isBeforeEnd,
+          isInRange
         });
-      }
+        
+        return isInRange;
+      });
+      console.log(`Date filter: ${beforeDateFilter} -> ${filtered.length} records`);
+    }
 
-      // Filter by search text
-      if (searchText) {
-        filtered = filtered.filter(record => 
-          record.studentName.toLowerCase().includes(searchText.toLowerCase()) ||
-          record.studentId.includes(searchText) ||
-          record.classCode.toLowerCase().includes(searchText.toLowerCase())
+    // Filter by search text
+    if (searchText) {
+      filtered = filtered.filter(record => 
+        record.studentName.toLowerCase().includes(searchText.toLowerCase()) ||
+        record.studentId.includes(searchText) ||
+        record.classCode.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    setFilteredData(filtered);
+  };
+
+  const exportToS3 = async () => {
+    setLoading(true);
+    try {
+      const response = await attendanceAPI.exportToS3(exportType);
+      if (response.message) {
+        const exportTypeLabel = exportType === 'attendance' ? 'Attendance Records' : 'Session Records';
+        message.success(
+          `Successfully exported ${response.record_count} ${exportTypeLabel} to S3!\n` +
+          `File: ${response.filename}\n` +
+          `Bucket: ${response.bucket}`,
+          6 // Show message for 6 seconds
         );
       }
-
-      setFilteredData(filtered);
+    } catch (error) {
+      console.error('S3 export failed:', error);
+      message.error('Failed to export data to S3. Please try again.');
+    } finally {
       setLoading(false);
-    }, 800);
-  };
-
-  const exportToCSV = () => {
-    const headers = ['Session ID', 'Class Code', 'Class Name', 'Date', 'Time', 'Room', 'Student ID', 'Student Name', 'Check-in Time', 'Status'];
-    const csvContent = [
-      headers.join(','),
-      ...filteredData.map(record => [
-        record.sessionId,
-        record.classCode,
-        `"${record.className}"`,
-        record.date,
-        record.time,
-        record.room,
-        record.studentId,
-        `"${record.studentName}"`,
-        record.checkInTime || 'N/A',
-        record.status
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `attendance-history-${moment().format('YYYY-MM-DD')}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    message.success('Attendance data exported to CSV successfully!');
-  };
-
-  const exportToExcel = () => {
-    // For demo purposes, we'll create a simple Excel-like format
-    message.info('Excel export feature would integrate with libraries like xlsx or exceljs');
+    }
   };
 
   const columns = [
@@ -259,36 +213,42 @@ const AttendanceHistory = ({ classes }) => {
       title: 'Date',
       dataIndex: 'date',
       key: 'date',
-      width: 100,
+      width: 120,
       sorter: (a, b) => moment(a.date).unix() - moment(b.date).unix(),
-      render: (date) => moment(date).format('MMM DD, YYYY')
+      render: (date) => (
+        <div style={{ fontSize: '14px' }}>
+          {moment(date).format('DD/MM/YYYY')}
+        </div>
+      )
     },
     {
       title: 'Class',
       dataIndex: 'classCode',
       key: 'classCode',
-      width: 80,
+      width: 100,
       render: (classCode, record) => (
         <div>
-          <Tag color={getColorForCode(classCode)} style={{ color: '#fff', fontWeight: 600 }}>{classCode}</Tag>
-          <br />
-          <Text style={{ fontSize: '12px', color: '#6B7280' }}>
+          <Tag color={getClassTagColor(classCode)} style={{ fontSize: '12px' }}>
+            {classCode}
+          </Tag>
+          <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
             {record.time}
-          </Text>
+          </div>
         </div>
       )
     },
     {
       title: 'Student',
       key: 'student',
-      width: 200,
+      width: 180,
       render: (record) => (
         <div>
-          <Text strong>{record.studentName}</Text>
-          <br />
-          <Text style={{ fontSize: '12px', color: '#6B7280' }}>
-            ID: {record.studentId}
-          </Text>
+          <div style={{ fontSize: '14px', fontWeight: '500' }}>
+            {record.studentName}
+          </div>
+          <div style={{ fontSize: '12px', color: '#888' }}>
+            {record.studentId}
+          </div>
         </div>
       )
     },
@@ -296,20 +256,18 @@ const AttendanceHistory = ({ classes }) => {
       title: 'Check-in Time',
       dataIndex: 'checkInTime',
       key: 'checkInTime',
-      width: 120,
+      width: 100,
       render: (checkInTime) => (
-        checkInTime ? (
-          <Text>{checkInTime}</Text>
-        ) : (
-          <Text style={{ color: '#9CA3AF' }}>Not checked in</Text>
-        )
+        <div style={{ fontSize: '14px' }}>
+          {checkInTime || '-'}
+        </div>
       )
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      width: 100,
+      width: 80,
       filters: [
         { text: 'Present', value: 'Present' },
         { text: 'Late', value: 'Late' },
@@ -317,19 +275,36 @@ const AttendanceHistory = ({ classes }) => {
       ],
       onFilter: (value, record) => record.status === value,
       render: (status) => {
-        const colors = {
-          'Present': 'green',
-          'Late': 'orange',
-          'Absent': 'red'
+        const statusConfig = {
+          'Present': { color: '#52c41a', bg: '#f6ffed' },
+          'Late': { color: '#fa8c16', bg: '#fff7e6' },
+          'Absent': { color: '#ff4d4f', bg: '#fff2f0' }
         };
-        return <Tag color={colors[status]}>{status}</Tag>;
+        const config = statusConfig[status] || { color: '#666', bg: '#f5f5f5' };
+        return (
+          <Tag 
+            style={{ 
+              color: config.color, 
+              backgroundColor: config.bg,
+              border: `1px solid ${config.color}20`,
+              fontSize: '12px'
+            }}
+          >
+            {status}
+          </Tag>
+        );
       }
     },
     {
       title: 'Room',
       dataIndex: 'room',
       key: 'room',
-      width: 80
+      width: 100,
+      render: (room) => (
+        <div style={{ fontSize: '14px' }}>
+          {room}
+        </div>
+      )
     }
   ];
 
@@ -344,130 +319,367 @@ const AttendanceHistory = ({ classes }) => {
 
   const stats = getStatusStats();
 
+  const renderCalendar = () => {
+    const currentDate = moment();
+    const startOfMonth = currentDate.clone().startOf('month');
+    const endOfMonth = currentDate.clone().endOf('month');
+    const startDate = startOfMonth.clone().startOf('week');
+    const endDate = endOfMonth.clone().endOf('week');
+    
+    const calendar = [];
+    const date = startDate.clone();
+    
+    while (date.isSameOrBefore(endDate, 'day')) {
+      calendar.push(date.clone());
+      date.add(1, 'day');
+    }
+    
+    const weeks = [];
+    for (let i = 0; i < calendar.length; i += 7) {
+      weeks.push(calendar.slice(i, i + 7));
+    }
+    
+    return (
+      <div style={{ backgroundColor: 'white', border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+        <div style={{ padding: '12px', borderBottom: '1px solid #e8e8e8', fontWeight: '500' }}>
+          {currentDate.format('MMM YYYY')}
+        </div>
+        <div style={{ padding: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} style={{ 
+                textAlign: 'center', 
+                fontSize: '12px', 
+                color: '#666', 
+                padding: '4px',
+                fontWeight: '500'
+              }}>
+                {day}
+              </div>
+            ))}
+          </div>
+          {weeks.map((week, weekIndex) => (
+            <div key={weekIndex} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
+              {week.map(day => {
+                const isCurrentMonth = day.isSame(currentDate, 'month');
+                const isToday = day.isSame(currentDate, 'day');
+                return (
+                  <div key={day.format('YYYY-MM-DD')} style={{
+                    textAlign: 'center',
+                    padding: '6px 4px',
+                    fontSize: '13px',
+                    color: isCurrentMonth ? '#333' : '#ccc',
+                    backgroundColor: isToday ? '#1890ff' : 'transparent',
+                    color: isToday ? 'white' : (isCurrentMonth ? '#333' : '#ccc'),
+                    borderRadius: '2px',
+                    cursor: 'pointer'
+                  }}>
+                    {day.format('D')}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const studentColumns = [
+    {
+      title: 'Student ID',
+      dataIndex: 'studentId',
+      key: 'studentId',
+      width: 100,
+    },
+    {
+      title: 'Name',
+      dataIndex: 'studentName',
+      key: 'studentName',
+      width: 200,
+    },
+    {
+      title: 'Present',
+      key: 'present',
+      width: 80,
+      align: 'center',
+      render: (record) => (
+        <div style={{
+          width: '16px',
+          height: '16px',
+          borderRadius: '50%',
+          backgroundColor: record.status === 'Present' ? '#52c41a' : '#f0f0f0',
+          border: record.status === 'Present' ? '2px solid #52c41a' : '2px solid #d9d9d9',
+          margin: '0 auto'
+        }} />
+      )
+    },
+    {
+      title: 'Absent',
+      key: 'absent',
+      width: 80,
+      align: 'center',
+      render: (record) => (
+        <div style={{
+          width: '16px',
+          height: '16px',
+          borderRadius: '50%',
+          backgroundColor: record.status === 'Absent' ? '#ff4d4f' : '#f0f0f0',
+          border: record.status === 'Absent' ? '2px solid #ff4d4f' : '2px solid #d9d9d9',
+          margin: '0 auto'
+        }} />
+      )
+    },
+    {
+      title: 'Leave',
+      key: 'leave',
+      width: 80,
+      align: 'center',
+      render: (record) => (
+        <div style={{
+          width: '16px',
+          height: '16px',
+          borderRadius: '50%',
+          backgroundColor: record.status === 'Late' ? '#fa8c16' : '#f0f0f0',
+          border: record.status === 'Late' ? '2px solid #fa8c16' : '2px solid #d9d9d9',
+          margin: '0 auto'
+        }} />
+      )
+    },
+    {
+      title: 'Room',
+      dataIndex: 'room',
+      key: 'room',
+      width: 100,
+      align: 'center',
+      render: (room) => (
+        <span style={{ fontSize: '12px' }}>
+          {room || 'Not Specified'}
+        </span>
+      )
+    }
+  ];
+
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      {/* Statistics Cards */}
-      <Row gutter={[16, 16]}>
-          <Col xs={12} sm={6}>
-            <Card>
-              <Statistic
-                title="Total Records"
-                value={stats.total}
-                prefix={<UserOutlined />}
-                valueStyle={{ color: '#1890ff' }}
+    <div style={{ padding: '16px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <Row gutter={[16, 16]} style={{ height: 'calc(100vh - 32px)' }}>
+        {/* Left Side - Filters and Student List */}
+        <Col xs={24} lg={18} style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Filters */}
+          <Row gutter={[12, 12]} style={{ marginBottom: '16px' }}>
+            <Col xs={24} sm={8} md={6}>
+              <div style={{ marginBottom: '4px', fontSize: '12px', color: '#666' }}>Class</div>
+              <Select
+                value={selectedClass}
+                onChange={setSelectedClass}
+                style={{ width: '100%' }}
+                size="middle"
+              >
+                <Option value="all">All Classes</Option>
+                {classes.map(cls => (
+                  <Option key={cls.id} value={cls.code}>
+                    {cls.code}
+                  </Option>
+                ))}
+              </Select>
+            </Col>
+            
+            <Col xs={24} sm={8} md={8}>
+              <div style={{ marginBottom: '4px', fontSize: '12px', color: '#666' }}>Date Range</div>
+              <RangePicker
+                value={dateRange}
+                onChange={(dates) => {
+                  console.log('Date range changed:', dates);
+                  if (dates) {
+                    console.log('Start date:', dates[0] ? dates[0].format('YYYY-MM-DD') : 'null');
+                    console.log('End date:', dates[1] ? dates[1].format('YYYY-MM-DD') : 'null');
+                  }
+                  setDateRange(dates);
+                }}
+                style={{ width: '100%' }}
+                size="middle"
+                format="DD/MM/YYYY"
+                allowClear
               />
-            </Card>
-          </Col>
-        <Col xs={12} sm={6}>
-          <Card>
-            <Statistic
-              title="Present"
-              value={stats.present}
-              valueStyle={{ color: '#52c41a' }}
+            </Col>
+            
+            <Col xs={24} sm={8} md={6}>
+              <div style={{ marginBottom: '4px', fontSize: '12px', color: '#666' }}>Search</div>
+              <Input
+                placeholder="Student name or ID"
+                prefix={<SearchOutlined />}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                allowClear
+                size="middle"
+              />
+            </Col>
+            
+            <Col xs={24} sm={24} md={4}>
+              <div style={{ marginBottom: '4px', fontSize: '12px', color: '#666' }}>Actions</div>
+              <Button 
+                icon={<ReloadOutlined />}
+                onClick={fetchAttendanceHistory}
+                loading={loading}
+                size="middle"
+                style={{ width: '100%' }}
+              >
+                Refresh
+              </Button>
+            </Col>
+          </Row>
+
+          {/* Student List */}
+          <div style={{ 
+            backgroundColor: 'white', 
+            border: '1px solid #e8e8e8', 
+            borderRadius: '4px',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <Table
+              columns={studentColumns}
+              dataSource={filteredData}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                pageSize: 20,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) => 
+                  `Showing ${range[0]}-${range[1]} of ${total} records`
+              }}
+              size="small"
+              style={{ backgroundColor: 'white', flex: 1 }}
+              scroll={{ y: 'calc(100vh - 280px)' }}
             />
-          </Card>
+          </div>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card>
-            <Statistic
-              title="Late"
-              value={stats.late}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card>
-            <Statistic
-              title="Absent"
-              value={stats.absent}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-          </Card>
+
+        {/* Right Side - Calendar and Stats */}
+        <Col xs={24} lg={6} style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Calendar */}
+          <div style={{ marginBottom: '16px' }}>
+            {renderCalendar()}
+          </div>
+
+          {/* Statistics Cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+            <div style={{
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeaa7',
+              borderRadius: '4px',
+              padding: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#fdcb6e',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }}>
+                {stats.total}
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', color: '#856404' }}>
+                  Total Students
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              backgroundColor: '#d4edda',
+              border: '1px solid #c3e6cb',
+              borderRadius: '4px',
+              padding: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#28a745',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: 'white'
+              }}>
+                {stats.present}
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', color: '#155724' }}>
+                  Present Today
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              backgroundColor: '#f8d7da',
+              border: '1px solid #f5c6cb',
+              borderRadius: '4px',
+              padding: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#dc3545',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: 'white'
+              }}>
+                {stats.absent}
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', color: '#721c24' }}>
+                  Absent Today
+                </div>
+              </div>
+            </div>
+
+            {/* Export Button */}
+            <div style={{ marginTop: '12px' }}>
+              <Select
+                value={exportType}
+                onChange={setExportType}
+                style={{ width: '100%', marginBottom: '8px' }}
+                size="middle"
+              >
+                <Option value="attendance">Attendance Records</Option>
+                <Option value="sessions">Session Records</Option>
+              </Select>
+              <Button 
+                icon={<DownloadOutlined />}
+                onClick={exportToS3}
+                loading={loading}
+                style={{ width: '100%' }}
+                size="middle"
+              >
+                Export to S3
+              </Button>
+            </div>
+          </div>
         </Col>
       </Row>
-
-      {/* Filters */}
-  <Card title={<span style={{ color: '#000' }}>Filters & Search</span>} size="small">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={8} md={6}>
-            <Select
-              value={selectedClass}
-              onChange={setSelectedClass}
-              placeholder="Select Class"
-              style={{ width: '100%' }}
-            >
-              <Option value="all">All Classes</Option>
-              {classes.map(cls => (
-                <Option key={cls.id} value={cls.code}>
-                  {cls.code} - {cls.name}
-                </Option>
-              ))}
-            </Select>
-          </Col>
-          
-          <Col xs={24} sm={8} md={6}>
-            <RangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              style={{ width: '100%' }}
-              placeholder={['Start Date', 'End Date']}
-            />
-          </Col>
-          
-          <Col xs={24} sm={8} md={6}>
-            <Input
-              placeholder="Search student name or ID"
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
-          </Col>
-          
-          <Col xs={24} sm={24} md={6}>
-            <Space>
-              <Tooltip title="Export to CSV">
-                <Button 
-                  type="primary"
-                  icon={<DownloadOutlined />}
-                  onClick={exportToCSV}
-                >
-                  CSV
-                </Button>
-              </Tooltip>
-              <Tooltip title="Export to Excel">
-                <Button 
-                  icon={<FileExcelOutlined />}
-                  onClick={exportToExcel}
-                >
-                  Excel
-                </Button>
-              </Tooltip>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Attendance Table */}
-  <Card title={<span style={{ color: '#000' }}>{`Attendance Records (${filteredData.length} records)`}</span>}>
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} of ${total} records`
-          }}
-          scroll={{ x: 800 }}
-          size="small"
-        />
-      </Card>
-    </Space>
+    </div>
   );
 };
 

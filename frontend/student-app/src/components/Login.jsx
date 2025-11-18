@@ -13,6 +13,8 @@ import {
   Alert,
 } from "react-native";
 import { router } from "expo-router";
+import { userAPI } from "../services/api-action-based";
+import cognitoAuth from "../services/cognitoAuth";
 
 // Web-safe alert function
 const showAlert = (title, message) => {
@@ -47,33 +49,44 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Extract student ID from email (e.g., 6522781713@g.siit.tu.ac.th)
+      // Try Cognito authentication first
+      try {
+        const result = await cognitoAuth.signIn(email, password);
+        
+        if (result.success && result.user) {
+          console.log("Cognito login successful:", result.user);
+          showAlert("Welcome", `Hello, ${result.user.name || 'Student'}!`);
+          
+          // Store user data for later use
+          global.currentUser = result.user;
+          
+          router.replace("/home");
+          return;
+        }
+      } catch (cognitoError) {
+        console.log('Cognito auth failed, trying fallback:', cognitoError);
+      }
+
+      // Fallback to old API if Cognito fails
       const studentId = email.split("@")[0];
-
-      // ========== REAL API CALL TO BACKEND ==========
-      const response = await fetch("http://192.168.1.154:5000/api/user/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_id: studentId,
-          password: password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        console.log("Login successful:", data.student);
-        showAlert("Welcome", `Hello, ${data.student.name}!`);
+      const data = await userAPI.login(studentId);
+      
+      if (data.user) {
+        console.log("API login successful:", data.user);
+        showAlert("Welcome", `Hello, ${data.user.name}!`);
+        
+        // Store user data for later use
+        global.currentUser = data.user;
+        
         router.replace("/home");
       } else {
-        showAlert("Login Failed", data.message || "Invalid credentials");
+        showAlert("Login Failed", "Invalid credentials. Please check your email and password.");
       }
     } catch (error) {
       console.error("Login error:", error);
       showAlert(
-        "Error",
-        "Network error. Please check your connection and try again."
+        "Login Failed",
+        "Invalid credentials. Please check your email and password."
       );
     } finally {
       setLoading(false);
@@ -124,7 +137,7 @@ export default function Login() {
             <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
-              placeholder="student@g.siit.tu.ac.th"
+              placeholder="student123@siit.tu.ac.th"
               placeholderTextColor="#999"
               value={email}
               onChangeText={setEmail}

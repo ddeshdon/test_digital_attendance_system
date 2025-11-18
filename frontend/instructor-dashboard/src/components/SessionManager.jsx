@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Form, Input, Button, InputNumber, Alert, Space, message } from 'antd';
 import { PlayCircleOutlined, StopOutlined, CopyOutlined } from '@ant-design/icons';
-import { sessionAPI } from '../services/api';
+import { sessionAPI } from '../services/api-action-based';
 
 const SessionManager = ({ onSessionChange, selectedClass }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [form] = Form.useForm();
+
+  // Update current time every second for live countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const startSession = async (values) => {
     setLoading(true);
@@ -19,6 +29,7 @@ const SessionManager = ({ onSessionChange, selectedClass }) => {
         session_id: sessionId,
         class_id: values.classId,
         room_id: values.roomId,
+        teacher_id: 'instructor123', // Default instructor ID
         beacon_uuid: values.beaconUUID.trim(),
         attendance_window_minutes: values.attendanceWindow,
         instructor_id: 'instructor123' // Get from auth context in production
@@ -28,19 +39,16 @@ const SessionManager = ({ onSessionChange, selectedClass }) => {
       
       const response = await sessionAPI.startSession(sessionData);
       
-      if (response.success) {
+      console.log('Session API response:', response);
+      
+      if (response.session && response.message === 'session created') {
         setSession(response.session);
         onSessionChange?.(response.session);
-        message.success('Attendance session started successfully!');
-        
-        // Show confirmation
-        message.info(
-          `Session active for ${values.attendanceWindow} minutes. Students can now check in!`,
-          8
-        );
+      } else {
+        console.error('Session creation failed:', response);
+        throw new Error(response.error || response.message || 'Failed to create session');
       }
     } catch (error) {
-      message.error('Failed to start session: ' + error.message);
       console.error('Session start error:', error);
     } finally {
       setLoading(false);
@@ -56,9 +64,8 @@ const SessionManager = ({ onSessionChange, selectedClass }) => {
       setSession(null);
       onSessionChange?.(null);
       form.resetFields();
-      message.success('Session ended successfully!');
     } catch (error) {
-      message.error('Failed to end session: ' + error.message);
+      console.error('Failed to end session:', error.message);
     } finally {
       setLoading(false);
     }
@@ -66,15 +73,19 @@ const SessionManager = ({ onSessionChange, selectedClass }) => {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
-      message.success('Copied to clipboard!');
+      // Clipboard copy successful - no popup
     }).catch(() => {
-      message.error('Failed to copy to clipboard');
+      console.error('Failed to copy to clipboard');
     });
   };
 
   if (session) {
-    const isExpired = new Date() > new Date(session.end_time);
-    const timeRemaining = Math.max(0, Math.ceil((new Date(session.end_time) - new Date()) / 60000));
+    const isExpired = currentTime > new Date(session.end_time);
+    const timeRemainingMs = Math.max(0, new Date(session.end_time) - currentTime);
+    const totalSecondsRemaining = Math.max(0, Math.floor(timeRemainingMs / 1000));
+    const minutesRemaining = Math.floor(totalSecondsRemaining / 60);
+    const secondsRemaining = totalSecondsRemaining % 60;
+    const timeRemaining = Math.max(0, Math.ceil(timeRemainingMs / 60000));
 
     return (
       <Card title="Active Attendance Session" style={{ marginBottom: 24 }}>
@@ -99,7 +110,7 @@ const SessionManager = ({ onSessionChange, selectedClass }) => {
               <p><strong>Ends:</strong> {new Date(session.end_time).toLocaleString()}</p>
               {!isExpired && (
                 <p><strong>Time Remaining:</strong> <span style={{ color: timeRemaining < 2 ? '#ff4d4f' : '#52c41a' }}>
-                  {timeRemaining} minutes
+                  {minutesRemaining}:{String(secondsRemaining).padStart(2, '0')}
                 </span></p>
               )}
               <p><strong>Status:</strong> 

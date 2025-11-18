@@ -13,6 +13,7 @@ import {
   Alert,
 } from "react-native";
 import { router } from "expo-router";
+import { userAPI } from "../services/api-action-based";
 
 // Web-safe alert function
 const showAlert = (title, message) => {
@@ -69,23 +70,13 @@ export default function Signup() {
 
     try {
       // ========== REAL API CALL TO BACKEND ==========
-      const response = await fetch(
-        "http://192.168.1.154:5000/api/user/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            student_id: studentId,
-            name: fullName,
-            email: email,
-            password: password,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
+      const data = await userAPI.createUser({
+        student_id: studentId,
+        name: fullName,
+        role: "student"
+      });
+      
+      if (data.message === "user created") {
         showAlert(
           "Success",
           "Account created successfully! You can now login."

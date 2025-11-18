@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Badge, Button, Space, Statistic, Row, Col, Alert } from 'antd';
 import { ReloadOutlined, DownloadOutlined } from '@ant-design/icons';
-import { attendanceAPI } from '../services/api';
+import { attendanceAPI } from "../services/api-action-based";
 
 const AttendanceList = ({ session }) => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
@@ -25,14 +25,14 @@ const AttendanceList = ({ session }) => {
       console.log('Fetching attendance for session:', session.session_id);
       const response = await attendanceAPI.getAttendanceList(session.session_id);
       
-      if (response.success) {
-        setAttendanceRecords(response.records || []);
+      if (response.attendance) {
+        setAttendanceRecords(response.attendance || []);
         
         // Calculate statistics
-        const presentCount = response.records?.filter(r => r.status === 'present').length || 0;
+        const presentCount = response.attendance?.filter(r => r.status === 'Present').length || 0;
         setStats({
           present: presentCount,
-          total: response.records?.length || 0
+          total: response.attendance?.length || 0
         });
       }
     } catch (error) {
@@ -101,7 +101,7 @@ const AttendanceList = ({ session }) => {
       width: 120,
       render: (method) => (
         <span style={{ fontSize: '12px' }}>
-          {method === 'beacon_scan' ? '📱 Beacon' : '✏️ Manual'}
+          {method === 'beacon_scan' ? '📱 Beacon' : 'Manual'}
         </span>
       ),
     },
@@ -176,8 +176,8 @@ const AttendanceList = ({ session }) => {
         <Col span={6}>
           <Statistic 
             title="Session Status" 
-            value={session?.status === 'open' ? 'Active' : 'Closed'}
-            valueStyle={{ color: session?.status === 'open' ? '#3f8600' : '#cf1322' }}
+            value={session?.status === 'active' ? 'Active' : 'Closed'}
+            valueStyle={{ color: session?.status === 'active' ? '#3f8600' : '#cf1322' }}
           />
         </Col>
       </Row>

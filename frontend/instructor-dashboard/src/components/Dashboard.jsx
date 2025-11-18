@@ -25,6 +25,7 @@ import SessionManager from './SessionManager';
 import AttendanceList from './AttendanceList';
 import AttendanceHistory from './AttendanceHistory';
 
+
 const { Header, Content, Footer } = Layout;
 const { Title, Text } = Typography;
 
@@ -33,8 +34,35 @@ const Dashboard = ({ instructor, onLogout }) => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
 
-  // Mock class data for Dr. Apichon
+  // Class data matching student app subjects
   const instructorClasses = [
+    {
+      id: 'CSS322',
+      code: 'CSS322',
+      name: 'Scientific Computing',
+      day: 'Thursday',
+      time: '13:00 - 16:00',
+      room: 'BKD2501',
+      color: '#8B5CF6'
+    },
+    {
+      id: 'DES201',
+      code: 'DES201',
+      name: 'Discrete Mathematics',
+      day: 'Thursday',
+      time: '9:00 - 12:00',
+      room: 'RS 1-409',
+      color: '#06B6D4'
+    },
+    {
+      id: 'TU100',
+      code: 'TU100',
+      name: 'Civic Engagement',
+      day: 'Friday',
+      time: '13:00 - 16:00',
+      room: 'RS 1-503',
+      color: '#10B981'
+    },
     {
       id: 'DES424',
       code: 'DES424',
@@ -42,52 +70,34 @@ const Dashboard = ({ instructor, onLogout }) => {
       day: 'Wednesday',
       time: '9:00 - 12:00',
       room: 'BKD 3507',
-      color: '#8B5CF6'
-    },
-    {
-      id: 'DES431',
-      code: 'DES431',
-      name: 'Big Data Analytics',
-      day: 'Tuesday',
-      time: '9:00 - 12:00',
-      room: 'BKD 3507',
-      color: '#06B6D4'
-    },
-    {
-      id: 'ICT760',
-      code: 'ICT760',
-      name: 'Digital Signal Processing and Internet of Things',
-      day: 'Monday',
-      time: '9:00 - 12:00',
-      room: 'BKD 3506',
-      color: '#10B981'
-    },
-    {
-      id: 'ICT750',
-      code: 'ICT750',
-      name: 'Communication Theory and Connectivity',
-      day: 'Monday',
-      time: '13:00 - 16:00',
-      room: 'BKD 3504',
       color: '#F59E0B'
     },
     {
-      id: 'ICT730',
-      code: 'ICT730',
-      name: 'Hardware Concepts for Artificial Intelligence and Internet of Things',
+      id: 'TU109',
+      code: 'TU109',
+      name: 'Innovation and Entrepreneurial mindset',
       day: 'Tuesday',
-      time: '13:00 - 16:00',
-      room: 'BKD 2401',
+      time: '9:00 - 12:00',
+      room: 'RS 3305',
       color: '#EF4444'
     },
     {
-      id: 'ICT710',
-      code: 'ICT710',
-      name: 'Software Concepts for Artificial Intelligence and Internet of Things',
-      day: 'Wednesday',
+      id: 'DES423',
+      code: 'DES423',
+      name: 'Applied Machine Learning and AI',
+      day: 'Monday',
       time: '13:00 - 16:00',
       room: 'BKD 3204',
       color: '#8B5A2B'
+    },
+    {
+      id: 'DES427',
+      code: 'DES427',
+      name: 'Mobile Application Programming',
+      day: 'Monday',
+      time: '13:00 - 16:00',
+      room: 'RBKD 3202',
+      color: '#D946EF'
     }
   ];
 
@@ -123,10 +133,7 @@ const Dashboard = ({ instructor, onLogout }) => {
           Logout
         </Space>
       ),
-      onClick: () => {
-        message.success('Logged out successfully');
-        onLogout();
-      }
+      onClick: onLogout
     }
   ];
 
@@ -179,7 +186,7 @@ const Dashboard = ({ instructor, onLogout }) => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src="/siitlogo.png"
+            src="/siit-logo.png"
             alt="SIIT Logo"
             className="siit-logo"
           />
@@ -203,7 +210,7 @@ const Dashboard = ({ instructor, onLogout }) => {
             {/* simple logout button instead of profile dropdown */}
             <Button
               type="primary"
-              onClick={() => { message.success('Logged out successfully'); onLogout(); }}
+              onClick={onLogout}
             >
               Logout
             </Button>

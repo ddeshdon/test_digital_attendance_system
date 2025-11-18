@@ -54,11 +54,10 @@ export default function Classroom() {
   const courseRoom = params.room || "N/A";
 
   useEffect(() => {
-    // Check if beacon scanning is supported (but prefer simulation for reliability)
-    setBeaconSupported(!!Beacons && Platform.OS !== 'web' && Platform.OS === 'ios');
+    // Check if beacon scanning is supported
+    setBeaconSupported(!!Beacons && Platform.OS !== 'web');
     
-    // Always request permissions but don't require them for simulation
-    if (Platform.OS !== 'web') {
+    if (beaconSupported) {
       requestPermissions();
     }
     
@@ -73,7 +72,7 @@ export default function Classroom() {
         }
       }
     };
-  }, []);
+  }, [beaconSupported]);
 
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
@@ -113,6 +112,153 @@ export default function Classroom() {
     }
   };
 
+  const startBeaconScanning = async () => {
+    if (!beaconSupported) {
+      // Fallback to simulation for web/unsupported platforms
+      handleScanBeaconSimulation();
+      return;
+    }
+
+    if (!permissions) {
+      showAlert(
+        'Permissions Required', 
+        'Please enable location and Bluetooth permissions to scan for classroom beacons.'
+      );
+      await requestPermissions();
+      return;
+    }
+
+    setScanning(true);
+    setDetectedBeacons([]);
+
+    try {
+      showAlert('Scanning...', 'Looking for classroom beacons nearby...');
+
+      // Request location permission for iOS
+      if (Platform.OS === 'ios') {
+        await Beacons.requestWhenInUseAuthorization();
+      }
+      
+      // Define the region to scan for beacons (scan all UUIDs)
+      const region = {
+        identifier: 'CLASSROOM_BEACONS',
+        uuid: null, // Scan for all beacon UUIDs
+      };
+
+      // Start ranging (detecting nearby beacons)
+      await Beacons.startRangingBeaconsInRegion(region);
+
+      // Listen for beacon detection events
+      const subscription = DeviceEventEmitter.addListener(
+        'beaconsDidRange',
+        (data) => {
+          console.log('Beacons detected:', data.beacons);
+          
+          if (data.beacons && data.beacons.length > 0) {
+            // Filter beacons within reasonable distance (10 meters)
+            const nearbyBeacons = data.beacons
+              .filter(beacon => beacon.distance <= 10 && beacon.distance > 0)
+              .sort((a, b) => a.distance - b.distance); // Closest first
+              
+            setDetectedBeacons(nearbyBeacons);
+            
+            // Auto-select the closest beacon if found
+            if (nearbyBeacons.length > 0) {
+              const closestBeacon = nearbyBeacons[0];
+              setBeaconUUID(closestBeacon.uuid.toUpperCase());
+              
+              showAlert(
+                '📡 Beacon Found!',
+                `Found classroom beacon!\\n\\n` +
+                `UUID: ${closestBeacon.uuid.substring(0, 8)}...\\n` +
+                `Distance: ${closestBeacon.distance.toFixed(1)} meters\\n` +
+                `Signal: ${closestBeacon.rssi} dBm\\n\\n` +
+                `You can now check in for attendance!`
+              );
+            }
+          }
+        }
+      );
+
+      // Stop scanning after 15 seconds
+      setTimeout(() => {
+        setScanning(false);
+        
+        try {
+          Beacons.stopRangingBeaconsInRegion('CLASSROOM_BEACONS');
+          subscription.remove();
+        } catch (error) {
+          console.log('Error stopping beacon scan:', error);
+        }
+        
+        if (detectedBeacons.length === 0) {
+          showAlert(
+            'No Beacons Found',
+            'Could not find any classroom beacons nearby.\\n\\n' +
+            'Make sure:\\n' +
+            '• You are within 10 meters of the classroom beacon\\n' +
+            '• Bluetooth is enabled on your device\\n' +
+            '• The instructor has started the beacon\\n\\n' +
+            'You can also enter the UUID manually.'
+          );
+        }
+      }, 15000); // 15 second scan timeout
+
+    } catch (error) {
+      console.error('Beacon scanning error:', error);
+      setScanning(false);
+      showAlert(
+        'Scanning Failed', 
+        'Unable to scan for beacons. Please check Bluetooth is enabled and try again, or enter the UUID manually.'
+      );
+    }
+  };
+
+  // Fallback simulation for web/unsupported platforms
+  const handleScanBeaconSimulation = async () => {
+    setScanning(true);
+    try {
+      showAlert(
+        "Scanning for Beacons...",
+        "Looking for nearby classroom beacons..."
+      );
+      
+      // Simulate scanning delay
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Simulate finding a beacon
+      const simulatedBeacon = {
+        uuid: "D001A2B6-AA1F-4860-9E43-FC83C418FC58",
+        distance: 2.5,
+        rssi: -65
+      };
+      
+      setDetectedBeacons([simulatedBeacon]);
+      setBeaconUUID(simulatedBeacon.uuid);
+      
+      showAlert(
+        "📡 Beacon Found! (Simulated)",
+        `Found classroom beacon!\\n\\n` +
+        `UUID: ${simulatedBeacon.uuid.substring(0, 8)}...\\n` +
+        `Distance: ${simulatedBeacon.distance} meters\\n` +
+        `Signal: ${simulatedBeacon.rssi} dBm\\n\\n` +
+        `You can now check in!`
+      );
+    } catch (error) {
+      showAlert("Scan Failed", "Could not scan for beacons. Please enter UUID manually.");
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const selectBeacon = (beacon) => {
+    setBeaconUUID(beacon.uuid.toUpperCase());
+    showAlert(
+      'Beacon Selected',
+      `Selected beacon at ${beacon.distance.toFixed(1)}m distance.\\n\\nYou can now check in!`
+    );
+  };
+
   const handleCheckIn = async () => {
     // Validate inputs
     if (!studentId) {
@@ -130,8 +276,8 @@ export default function Classroom() {
     if (selectedBeacon && selectedBeacon.distance > 5.0) {
       showAlert(
         "Too Far Away",
-        `You must be within 5 meters of the classroom beacon.\n\n` +
-        `Current distance: ${selectedBeacon.distance.toFixed(1)} meters\n\n` +
+        `You must be within 5 meters of the classroom beacon.\\n\\n` +
+        `Current distance: ${selectedBeacon.distance.toFixed(1)} meters\\n\\n` +
         `Please move closer to the instructor's beacon device.`
       );
       return;
@@ -174,15 +320,15 @@ export default function Classroom() {
         setIsCheckedIn(true);
 
         const proximityInfo = selectedBeacon 
-          ? `\nDistance: ${selectedBeacon.distance.toFixed(1)}m` 
+          ? `\\nDistance: ${selectedBeacon.distance.toFixed(1)}m` 
           : '';
 
         showAlert(
           "✅ Check-in Successful!",
-          `Attendance marked successfully!\n\n` +
-          `Class: ${response.session?.class_id}\n` +
-          `Room: ${response.session?.room_id}\n` +
-          `Time: ${time}\n` +
+          `Attendance marked successfully!\\n\\n` +
+          `Class: ${response.session?.class_id}\\n` +
+          `Room: ${response.session?.room_id}\\n` +
+          `Time: ${time}\\n` +
           `Status: ${response.attendance?.status || 'Present'}${proximityInfo}`
         );
 
@@ -206,145 +352,6 @@ export default function Classroom() {
       setLoading(false);
     }
   };
-
-  const startBeaconScanning = async () => {
-    // Always try simulation first for better compatibility
-    if (!beaconSupported || Platform.OS === 'web') {
-      handleScanBeaconSimulation();
-      return;
-    }
-
-    // Try real beacon scanning with better error handling
-    try {
-      if (!permissions) {
-        showAlert(
-          'Permissions Required', 
-          'Please enable location and Bluetooth permissions to scan for classroom beacons.'
-        );
-        await requestPermissions();
-        if (!permissions) {
-          // If permissions still not granted, fall back to simulation
-          handleScanBeaconSimulation();
-          return;
-        }
-      }
-
-      setScanning(true);
-      setDetectedBeacons([]);
-
-      showAlert('Scanning...', 'Looking for classroom beacons nearby...');
-
-      // Request location permission for iOS
-      if (Platform.OS === 'ios') {
-        await Beacons.requestWhenInUseAuthorization();
-      }
-      
-      // Define the region to scan for beacons (scan all UUIDs)
-      const region = {
-        identifier: 'CLASSROOM_BEACONS',
-        uuid: null, // Scan for all beacon UUIDs
-      };
-
-      // Start ranging (detecting nearby beacons)
-      await Beacons.startRangingBeaconsInRegion(region);
-
-      // Listen for beacon detection events
-      const subscription = DeviceEventEmitter.addListener(
-        'beaconsDidRange',
-        (data) => {
-          console.log('Beacons detected:', data.beacons);
-          
-          if (data.beacons && data.beacons.length > 0) {
-            // Filter beacons within reasonable distance (10 meters)
-            const nearbyBeacons = data.beacons
-              .filter(beacon => beacon.distance <= 10 && beacon.distance > 0)
-              .sort((a, b) => a.distance - b.distance); // Closest first
-              
-            setDetectedBeacons(nearbyBeacons);
-            
-            // Auto-select the closest beacon if found
-            if (nearbyBeacons.length > 0) {
-              const closestBeacon = nearbyBeacons[0];
-              setBeaconUUID(closestBeacon.uuid.toUpperCase());
-              
-              // Beacon found - UUID auto-filled
-            }
-          }
-        }
-      );
-
-      // Stop scanning after 15 seconds
-      setTimeout(() => {
-        setScanning(false);
-        
-        try {
-          Beacons.stopRangingBeaconsInRegion('CLASSROOM_BEACONS');
-          subscription.remove();
-        } catch (error) {
-          console.log('Error stopping beacon scan:', error);
-        }
-        
-        if (detectedBeacons.length === 0) {
-          showAlert(
-            'No Beacons Found',
-            'Could not find any classroom beacons nearby.\n\n' +
-            'Make sure:\n' +
-            '• You are within 10 meters of the classroom beacon\n' +
-            '• Bluetooth is enabled on your device\n' +
-            '• The instructor has started the beacon\n\n' +
-            'You can also enter the UUID manually.'
-          );
-        }
-      }, 15000); // 15 second scan timeout
-
-
-
-    } catch (error) {
-      console.error('Beacon scanning error:', error);
-      setScanning(false);
-      
-      // Automatically fall back to simulation mode
-      
-      // Wait a moment then try simulation
-      setTimeout(() => {
-        handleScanBeaconSimulation();
-      }, 1000);
-    }
-  };
-
-  // Fallback simulation for web/unsupported platforms
-  const handleScanBeaconSimulation = async () => {
-    setScanning(true);
-    try {
-      showAlert(
-        "Scanning for Beacons...",
-        "Looking for nearby classroom beacons..."
-      );
-      
-      // Simulate scanning delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Simulate finding a beacon
-      const simulatedBeacon = {
-        uuid: "D001A2B6-AA1F-4860-9E43-FC83C418FC58",
-        distance: 2.5,
-        rssi: -65
-      };
-      
-      setDetectedBeacons([simulatedBeacon]);
-      setBeaconUUID(simulatedBeacon.uuid);
-      
-      // Beacon found - UUID auto-filled
-    } catch (error) {
-      showAlert("Scan Failed", "Could not scan for beacons. Please enter UUID manually.");
-    } finally {
-      setScanning(false);
-    }
-  };
-
-
-
-
 
   const handleBack = () => {
     router.back();
@@ -425,7 +432,7 @@ export default function Classroom() {
           {/* Beacon Scanning Section */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
-              Classroom Beacon Detection
+              Classroom Beacon {beaconSupported ? '(Real Scanning)' : '(Simulation)'}
             </Text>
             
             {/* Scan Button */}
@@ -444,12 +451,34 @@ export default function Classroom() {
                 </View>
               ) : (
                 <Text style={styles.scanButtonText}>
-                  Scan for Classroom Beacon
+                  📡 Scan for Classroom Beacon
                 </Text>
               )}
             </TouchableOpacity>
 
-
+            {/* Detected Beacons List */}
+            {detectedBeacons.length > 0 && (
+              <View style={styles.beaconList}>
+                <Text style={styles.beaconListTitle}>Detected Beacons:</Text>
+                {detectedBeacons.map((beacon, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.beaconItem,
+                      beacon.uuid.toUpperCase() === beaconUUID.toUpperCase() && styles.beaconItemSelected
+                    ]}
+                    onPress={() => selectBeacon(beacon)}
+                  >
+                    <Text style={styles.beaconUUID}>
+                      📡 {beacon.uuid.substring(0, 8)}...{beacon.uuid.substring(beacon.uuid.length - 4)}
+                    </Text>
+                    <Text style={styles.beaconDetails}>
+                      📏 {beacon.distance.toFixed(1)}m • 📶 {beacon.rssi} dBm
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
             {/* Manual UUID Input */}
             <Text style={styles.label}>Or Enter Beacon UUID Manually:</Text>
@@ -484,7 +513,7 @@ export default function Classroom() {
           </TouchableOpacity>
         </View>
 
-        {/* Check-in History Table */}
+        {/* Check-in History */}
         {checkInHistory.length > 0 && (
           <View style={styles.historyCard}>
             <Text style={styles.sectionTitle}>Check-in History</Text>
@@ -677,7 +706,38 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
-
+  beaconList: {
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  beaconListTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#722F87",
+    marginBottom: 8,
+  },
+  beaconItem: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#dee2e6",
+  },
+  beaconItemSelected: {
+    backgroundColor: "#e7f3ff",
+    borderColor: "#007bff",
+  },
+  beaconUUID: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  beaconDetails: {
+    fontSize: 12,
+    color: "#666",
+  },
   checkInButton: {
     backgroundColor: "#BE1E2D",
     borderRadius: 12,

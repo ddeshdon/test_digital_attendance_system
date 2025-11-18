@@ -1,0 +1,19 @@
+{
+  "userPoolId": "us-east-1_nvaJtHDVc",
+  "webClientId": "3vhmp5qd9m5necfn07r36538sn",
+  "mobileClientId": "6662k02feufhmo08ue2e141jjk",
+  "mobileClientSecret": "a7n3tncn1eg2av08pgtqbv0ga8r290ftbuqsfiqm45d384dibi2",
+  "region": "us-east-1",
+  "testUsers": {
+    "instructor": {
+      "username": "apichon@siit.tu.ac.th",
+      "password": "Siit2025",
+      "email": "apichon@siit.tu.ac.th"
+    },
+    "student": {
+      "username": "student123@siit.tu.ac.th",
+      "password": "Student123",
+      "email": "student123@siit.tu.ac.th"
+    }
+  }
+}

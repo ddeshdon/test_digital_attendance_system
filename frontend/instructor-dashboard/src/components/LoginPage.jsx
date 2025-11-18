@@ -11,6 +11,7 @@ import {
   Col 
 } from 'antd';
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
+import cognitoAuth from '../services/cognitoAuth';
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -20,36 +21,61 @@ const LoginPage = ({ onLogin }) => {
   const [form] = Form.useForm();
 
   const MOCK_CREDENTIALS = {
-    username: 'apichon.w',
-    password: 'siit2025'
+    username: 'apichon@g.siit.tu.ac.th',
+    password: 'Siit2025'
   };
 
   const handleLogin = async (values) => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Try Cognito authentication first
+      try {
+        const result = await cognitoAuth.signIn(values.username, values.password);
+        
+        if (result.success && result.user) {
+          const instructorData = {
+            name: result.user.name || 'Instructor',
+            username: result.user.username || values.username,
+            email: result.user.email || 'instructor@siit.tu.ac.th',
+            department: result.user.department || 'Information Technology',
+            role: result.user.role || 'instructor',
+            loginTime: new Date().toISOString(),
+            accessToken: result.user.accessToken,
+            idToken: result.user.idToken
+          };
+        onLogin(instructorData);
+          return;
+        }
+      } catch (cognitoError) {
+        console.log('Cognito login failed, trying fallback:', cognitoError);
+      }
+      
+      // Fallback to hardcoded credentials if Cognito fails
       if (values.username === MOCK_CREDENTIALS.username && values.password === MOCK_CREDENTIALS.password) {
         const instructorData = {
           name: 'Dr. Apichon Witayangkurn',
           username: 'apichon.w',
-          email: 'apichon@siit.tu.ac.th',
+          email: 'apichon@g.siit.tu.ac.th',
           department: 'Information Technology',
+          role: 'instructor',
           loginTime: new Date().toISOString()
         };
-        message.success('Login successful! Welcome back, Dr. Apichon');
         onLogin(instructorData);
       } else {
-        message.error('Invalid username or password');
+        console.error('Invalid username or password');
       }
     } catch (error) {
-      message.error('Login failed. Please try again.');
+      console.error('Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDemoLogin = () => {
-    form.setFieldsValue(MOCK_CREDENTIALS);
+    form.setFieldsValue({
+      username: 'apichon@g.siit.tu.ac.th',
+      password: 'Siit2025'
+    });
   };
 
   return (
@@ -76,17 +102,17 @@ const LoginPage = ({ onLogin }) => {
         <Row gutter={[48, 0]} align="middle" style={{ width: '100%', maxWidth: '1200px' }}>
           
           {/* Left side - Branding */}
-          <Col xs={24} lg={12} style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+          <Col xs={24} lg={14} style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', flexWrap: 'nowrap' }}>
               <img 
-                src="/siitlogo.png"
+                src="/siit-logo.png"
                 alt="SIIT Logo"
-                style={{ height: '90px', marginRight: '18px', filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15))' }}
-                onError={(e) => { e.target.onerror = null; e.target.src = "/fallback-logo.png"; }}
+                style={{ height: '90px', marginRight: '18px', filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15))', flexShrink: 0 }}
+                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
               />
-              <div>
-                <Title level={1} style={{ color: '#000', margin: 0, fontSize: '40px' }}>Digital Attendance</Title>
-                <Title level={4} style={{ color: '#000', margin: 0, fontWeight: 400 }}>System</Title>
+              <div style={{ minWidth: '280px' }}>
+                <Title level={1} style={{ color: '#000', margin: 0, fontSize: '40px', whiteSpace: 'nowrap' }}>Digital Attendance</Title>
+                <Title level={4} style={{ color: '#000', margin: 0, fontWeight: 700, whiteSpace: 'nowrap' }}>System</Title>
               </div>
             </div>
 
@@ -98,7 +124,7 @@ const LoginPage = ({ onLogin }) => {
           </Col>
 
           {/* Right side - Login Form */}
-          <Col xs={24} lg={12}>
+          <Col xs={24} lg={10}>
             <Card style={{
               borderRadius: '24px',
               boxShadow: '0 20px 60px rgba(107, 33, 168, 0.2)',
@@ -114,8 +140,8 @@ const LoginPage = ({ onLogin }) => {
               </div>
 
               <Form form={form} name="login" onFinish={handleLogin} layout="vertical" size="large">
-                <Form.Item name="username" label="Username" rules={[{ required: true, message: 'Please enter your username!' }]}>
-                  <Input prefix={<UserOutlined style={{ color: '#8B5CF6' }} />} placeholder="Enter your username" style={{ borderRadius: '12px', height: '48px' }} />
+                <Form.Item name="username" label="Email" rules={[{ required: true, message: 'Please enter your email!' }]}>
+                  <Input prefix={<UserOutlined style={{ color: '#8B5CF6' }} />} placeholder="Enter your email" style={{ borderRadius: '12px', height: '48px' }} />
                 </Form.Item>
 
                 <Form.Item name="password" label="Password" rules={[{ required: true, message: 'Please enter your password!' }]}>
@@ -135,11 +161,11 @@ const LoginPage = ({ onLogin }) => {
                 </div>
               </Form>
 
-              <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(0,0,0,0.03)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.03)' }}>
+                <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(0,0,0,0.03)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.03)' }}>
                 <Text style={{ fontSize: '12px', color: '#374151', display: 'block', textAlign: 'center', lineHeight: 1.5 }}>
                   <strong>Demo Credentials:</strong><br />
-                  Username: apichon.w<br />
-                  Password: siit2025
+                  Email: apichon@g.siit.tu.ac.th<br />
+                  Password: Siit2025
                 </Text>
               </div>
             </Card>
