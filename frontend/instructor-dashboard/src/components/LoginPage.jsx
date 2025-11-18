@@ -6,8 +6,7 @@ import {
   Input, 
   Button, 
   Typography, 
-  message, 
-  Space,
+  message,
   Row,
   Col 
 } from 'antd';
@@ -20,7 +19,6 @@ const LoginPage = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
-  // Mock login credentials
   const MOCK_CREDENTIALS = {
     username: 'apichon.w',
     password: 'siit2025'
@@ -28,14 +26,9 @@ const LoginPage = ({ onLogin }) => {
 
   const handleLogin = async (values) => {
     setLoading(true);
-    
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      if (values.username === MOCK_CREDENTIALS.username && 
-          values.password === MOCK_CREDENTIALS.password) {
-        
+      if (values.username === MOCK_CREDENTIALS.username && values.password === MOCK_CREDENTIALS.password) {
         const instructorData = {
           name: 'Dr. Apichon Witayangkurn',
           username: 'apichon.w',
@@ -43,7 +36,6 @@ const LoginPage = ({ onLogin }) => {
           department: 'Information Technology',
           loginTime: new Date().toISOString()
         };
-        
         message.success('Login successful! Welcome back, Dr. Apichon');
         onLogin(instructorData);
       } else {
@@ -61,11 +53,7 @@ const LoginPage = ({ onLogin }) => {
   };
 
   return (
-    <Layout style={{ 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(107, 33, 168, 0.4) 100%)',
-      position: 'relative'
-    }}>
+    <Layout style={{ minHeight: '100vh', background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(107, 33, 168, 0.4) 100%)', position: 'relative' }}>
       {/* Background overlay */}
       <div 
         style={{
@@ -74,7 +62,7 @@ const LoginPage = ({ onLogin }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundImage: `url(${process.env.PUBLIC_URL}/siit-building.jpg)`,
+          backgroundImage: `url("/siit-building.jpg")`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -83,47 +71,26 @@ const LoginPage = ({ onLogin }) => {
           zIndex: 0
         }}
       />
-      
-      <Content style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        padding: '50px',
-        position: 'relative',
-        zIndex: 1
-      }}>
+
+      <Content style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '50px', position: 'relative', zIndex: 1 }}>
         <Row gutter={[48, 0]} align="middle" style={{ width: '100%', maxWidth: '1200px' }}>
-          {/* Left side - Branding (simplified) */}
+          
+          {/* Left side - Branding */}
           <Col xs={24} lg={12} style={{ textAlign: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
               <img 
-                src={`${process.env.PUBLIC_URL}/siit-logo.png`}
-                alt="SIIT Logo" 
+                src="/siitlogo.png"
+                alt="SIIT Logo"
                 style={{ height: '90px', marginRight: '18px', filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15))' }}
+                onError={(e) => { e.target.onerror = null; e.target.src = "/fallback-logo.png"; }}
               />
               <div>
-                <Title level={1} style={{ 
-                  color: '#000',
-                  margin: 0, 
-                  fontSize: '40px'
-                }}>
-                  Digital Attendance
-                </Title>
-                <Title level={4} style={{ 
-                  color: '#000', 
-                  margin: 0, 
-                  fontWeight: 400,
-                }}>
-                  System
-                </Title>
+                <Title level={1} style={{ color: '#000', margin: 0, fontSize: '40px' }}>Digital Attendance</Title>
+                <Title level={4} style={{ color: '#000', margin: 0, fontWeight: 400 }}>System</Title>
               </div>
             </div>
 
-            <Text style={{ 
-              color: '#000',
-              fontSize: '16px',
-              lineHeight: 1.5
-            }}>
+            <Text style={{ color: '#000', fontSize: '16px', lineHeight: 1.5 }}>
               Sirindhorn International Institute of Technology
               <br />
               Thammasat University
@@ -142,99 +109,34 @@ const LoginPage = ({ onLogin }) => {
               margin: '0 auto'
             }}>
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <Title level={3} style={{ 
-                  color: '#000', 
-                  margin: 0,
-                  marginBottom: '8px' 
-                }}>
-                  Instructor Login
-                </Title>
-                <Text style={{ color: '#000' }}>
-                  Sign in to access your dashboard
-                </Text>
+                <Title level={3} style={{ color: '#000', margin: 0, marginBottom: '8px' }}>Instructor Login</Title>
+                <Text style={{ color: '#000' }}>Sign in to access your dashboard</Text>
               </div>
 
-              <Form
-                form={form}
-                name="login"
-                onFinish={handleLogin}
-                layout="vertical"
-                size="large"
-              >
-                <Form.Item
-                  name="username"
-                  label="Username"
-                  rules={[
-                    { required: true, message: 'Please enter your username!' }
-                  ]}
-                >
-                  <Input 
-                    prefix={<UserOutlined style={{ color: '#8B5CF6' }} />} 
-                    placeholder="Enter your username"
-                    style={{ borderRadius: '12px', height: '48px' }}
-                  />
+              <Form form={form} name="login" onFinish={handleLogin} layout="vertical" size="large">
+                <Form.Item name="username" label="Username" rules={[{ required: true, message: 'Please enter your username!' }]}>
+                  <Input prefix={<UserOutlined style={{ color: '#8B5CF6' }} />} placeholder="Enter your username" style={{ borderRadius: '12px', height: '48px' }} />
                 </Form.Item>
 
-                <Form.Item
-                  name="password"
-                  label="Password"
-                  rules={[
-                    { required: true, message: 'Please enter your password!' }
-                  ]}
-                >
-                  <Input.Password 
-                    prefix={<LockOutlined style={{ color: '#8B5CF6' }} />} 
-                    placeholder="Enter your password"
-                    style={{ borderRadius: '12px', height: '48px' }}
-                  />
+                <Form.Item name="password" label="Password" rules={[{ required: true, message: 'Please enter your password!' }]}>
+                  <Input.Password prefix={<LockOutlined style={{ color: '#8B5CF6' }} />} placeholder="Enter your password" style={{ borderRadius: '12px', height: '48px' }} />
                 </Form.Item>
 
                 <Form.Item style={{ marginBottom: '16px' }}>
-                  <Button 
-                    type="primary" 
-                    htmlType="submit" 
-                    loading={loading}
-                    block
-                    icon={<LoginOutlined />}
-                    style={{ 
-                      height: '48px',
-                      borderRadius: '12px',
-                      fontSize: '16px',
-                      fontWeight: 600
-                    }}
-                  >
+                  <Button type="primary" htmlType="submit" loading={loading} block icon={<LoginOutlined />} style={{ height: '48px', borderRadius: '12px', fontSize: '16px', fontWeight: 600 }}>
                     Sign In
                   </Button>
                 </Form.Item>
 
                 <div style={{ textAlign: 'center' }}>
-                  <Button 
-                    type="link" 
-                    onClick={handleDemoLogin}
-                    style={{ 
-                      color: '#8B5CF6',
-                      fontWeight: 500
-                    }}
-                  >
+                  <Button type="link" onClick={handleDemoLogin} style={{ color: '#8B5CF6', fontWeight: 500 }}>
                     Use Demo Credentials
                   </Button>
                 </div>
               </Form>
 
-              <div style={{
-                marginTop: '24px',
-                padding: '16px',
-                background: 'rgba(0,0,0,0.03)',
-                borderRadius: '12px',
-                border: '1px solid rgba(0,0,0,0.03)'
-              }}>
-                <Text style={{ 
-                  fontSize: '12px', 
-                  color: '#374151',
-                  display: 'block',
-                  textAlign: 'center',
-                  lineHeight: 1.5
-                }}>
+              <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(0,0,0,0.03)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.03)' }}>
+                <Text style={{ fontSize: '12px', color: '#374151', display: 'block', textAlign: 'center', lineHeight: 1.5 }}>
                   <strong>Demo Credentials:</strong><br />
                   Username: apichon.w<br />
                   Password: siit2025

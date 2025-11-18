@@ -23,15 +23,18 @@ const showAlert = (title, message) => {
   }
 };
 
-export default function Login() {
+export default function Signup() {
+  const [fullName, setFullName] = useState("");
+  const [studentId, setStudentId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     // Validate inputs
-    if (!email || !password) {
-      showAlert("Error", "Please enter both email and password");
+    if (!fullName || !studentId || !email || !password || !confirmPassword) {
+      showAlert("Error", "Please fill in all fields");
       return;
     }
 
@@ -44,33 +47,58 @@ export default function Login() {
       return;
     }
 
+    // Validate student ID format (10 digits)
+    if (!/^\d{10}$/.test(studentId)) {
+      showAlert("Invalid Student ID", "Student ID must be 10 digits");
+      return;
+    }
+
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      showAlert("Error", "Passwords do not match");
+      return;
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      showAlert("Weak Password", "Password must be at least 6 characters long");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Extract student ID from email (e.g., 6522781713@g.siit.tu.ac.th)
-      const studentId = email.split("@")[0];
-
       // ========== REAL API CALL TO BACKEND ==========
-      const response = await fetch("http://192.168.1.154:5000/api/user/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_id: studentId,
-          password: password,
-        }),
-      });
+      const response = await fetch(
+        "http://192.168.1.154:5000/api/user/register",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            student_id: studentId,
+            name: fullName,
+            email: email,
+            password: password,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
-        console.log("Login successful:", data.student);
-        showAlert("Welcome", `Hello, ${data.student.name}!`);
-        router.replace("/home");
+        showAlert(
+          "Success",
+          "Account created successfully! You can now login."
+        );
+        router.replace("/login");
       } else {
-        showAlert("Login Failed", data.message || "Invalid credentials");
+        showAlert(
+          "Registration Failed",
+          data.message || "Unable to create account"
+        );
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Registration error:", error);
       showAlert(
         "Error",
         "Network error. Please check your connection and try again."
@@ -80,8 +108,8 @@ export default function Login() {
     }
   };
 
-  const handleSignupPress = () => {
-    router.push("/signup");
+  const handleLoginPress = () => {
+    router.back();
   };
 
   // For web compatibility - check if assets exist
@@ -115,11 +143,38 @@ export default function Login() {
               resizeMode="contain"
             />
           )}
-          <Text style={styles.title}>Digital Attendance</Text>
-          <Text style={styles.subtitle}>Student Login</Text>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Sign up to get started</Text>
         </View>
 
         <View style={styles.formContainer}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Full Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="John Doe"
+              placeholderTextColor="#999"
+              value={fullName}
+              onChangeText={setFullName}
+              autoCapitalize="words"
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Student ID</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="6522781234"
+              placeholderTextColor="#999"
+              value={studentId}
+              onChangeText={setStudentId}
+              keyboardType="numeric"
+              maxLength={10}
+              editable={!loading}
+            />
+          </View>
+
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email</Text>
             <TextInput
@@ -149,20 +204,37 @@ export default function Login() {
             />
           </View>
 
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Confirm Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Re-enter your password"
+              placeholderTextColor="#999"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              editable={!loading}
+            />
+          </View>
+
           <TouchableOpacity
-            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-            onPress={handleLogin}
+            style={[
+              styles.signupButton,
+              loading && styles.signupButtonDisabled,
+            ]}
+            onPress={handleSignup}
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? "Signing in..." : "Login"}
+              {loading ? "Creating Account..." : "Sign Up"}
             </Text>
           </TouchableOpacity>
 
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>No account? </Text>
-            <TouchableOpacity onPress={handleSignupPress} disabled={loading}>
-              <Text style={styles.signupLink}>Sign up</Text>
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Already have an account? </Text>
+            <TouchableOpacity onPress={handleLoginPress} disabled={loading}>
+              <Text style={styles.loginLink}>Login</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -214,6 +286,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 20,
   },
   headerContainer: {
     alignItems: "center",
@@ -248,7 +321,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
     fontSize: 16,
@@ -265,7 +338,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
-  loginButton: {
+  signupButton: {
     backgroundColor: "#BE1E2D", // SIIT Red color
     padding: 15,
     borderRadius: 10,
@@ -278,7 +351,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     marginTop: 10,
   },
-  loginButtonDisabled: {
+  signupButtonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
@@ -286,17 +359,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  signupContainer: {
+  loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginTop: 20,
   },
-  signupText: {
+  loginText: {
     fontSize: 14,
     color: "#722F87",
   },
-  signupLink: {
+  loginLink: {
     fontSize: 14,
     color: "#BE1E2D",
     fontWeight: "bold",

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import Classroom from '../src/components/Classroom';
+import Signup from '../src/components/Signup';
 
-export default function ClassroomPage() {
+export default function SignupPage() {
   return (
     <>
       <Stack.Screen 
@@ -10,7 +10,7 @@ export default function ClassroomPage() {
           headerShown: false,
         }}
       />
-      <Classroom />
+      <Signup />
     </>
   );
 }

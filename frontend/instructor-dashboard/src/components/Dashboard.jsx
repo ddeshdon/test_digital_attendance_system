@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
-import { 
-  Layout, 
-  Typography, 
-  Space, 
-  Divider, 
-  Card, 
-  Row, 
-  Col, 
-  Tag, 
+import {
+  Layout,
+  Typography,
+  Space,
+  Divider,
+  Card,
+  Row,
+  Col,
+  Tag,
   Button,
   Avatar,
   Dropdown,
   message
 } from 'antd';
-import { 
-  UserOutlined, 
-  LogoutOutlined, 
-  ClockCircleOutlined, 
+import {
+  UserOutlined,
+  LogoutOutlined,
+  ClockCircleOutlined,
   EnvironmentOutlined,
   CalendarOutlined,
   BookOutlined
@@ -46,7 +46,7 @@ const Dashboard = ({ instructor, onLogout }) => {
     },
     {
       id: 'DES431',
-      code: 'DES431', 
+      code: 'DES431',
       name: 'Big Data Analytics',
       day: 'Tuesday',
       time: '9:00 - 12:00',
@@ -58,7 +58,7 @@ const Dashboard = ({ instructor, onLogout }) => {
       code: 'ICT760',
       name: 'Digital Signal Processing and Internet of Things',
       day: 'Monday',
-      time: '9:00 - 12:00', 
+      time: '9:00 - 12:00',
       room: 'BKD 3506',
       color: '#10B981'
     },
@@ -133,7 +133,7 @@ const Dashboard = ({ instructor, onLogout }) => {
   const getDayColor = (day) => {
     const colors = {
       'Monday': '#10B981',
-      'Tuesday': '#3B82F6', 
+      'Tuesday': '#3B82F6',
       'Wednesday': '#8B5CF6',
       'Thursday': '#F59E0B',
       'Friday': '#EF4444',
@@ -144,15 +144,15 @@ const Dashboard = ({ instructor, onLogout }) => {
   };
 
   return (
-    <Layout 
-      className="layout" 
-      style={{ 
+    <Layout
+      className="layout"
+      style={{
         minHeight: '100vh',
         position: 'relative'
       }}
     >
       {/* Background image overlay */}
-      <div 
+      <div
         style={{
           position: 'absolute',
           top: 0,
@@ -168,22 +168,22 @@ const Dashboard = ({ instructor, onLogout }) => {
           zIndex: 0
         }}
       />
-      
-      <Header style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
+
+      <Header style={{
+        display: 'flex',
+        alignItems: 'center',
         justifyContent: 'space-between',
         padding: '8px 50px',
         backgroundColor: '#8e4ad1ff',
         background: '#8e4ad1ff'
       }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img 
-            src={`${process.env.PUBLIC_URL}/siit-logo.png`}
-            alt="SIIT Logo" 
+          <img
+            src="/siitlogo.png"
+            alt="SIIT Logo"
             className="siit-logo"
           />
-          <Title style={{ 
+          <Title style={{
             color: '#fff !important',
             margin: 0,
             fontSize: '26px',
@@ -194,14 +194,17 @@ const Dashboard = ({ instructor, onLogout }) => {
           </Title>
 
         </div>
-        
+
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Space size="middle">
             <Text style={{ color: '#fff', marginRight: '16px', fontSize: '16px', fontWeight: 600 }}>
               Welcome, {instructor.name}
             </Text>
             {/* simple logout button instead of profile dropdown */}
-            <Button type="default" style={{ color: '#000' }} onClick={() => { message.success('Logged out successfully'); onLogout(); }}>
+            <Button
+              type="primary"
+              onClick={() => { message.success('Logged out successfully'); onLogout(); }}
+            >
               Logout
             </Button>
           </Space>
@@ -209,10 +212,10 @@ const Dashboard = ({ instructor, onLogout }) => {
       </Header>
 
       <Content style={{ padding: '50px' }}>
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.95)', 
-          padding: 40, 
-          minHeight: 600, 
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: 40,
+          minHeight: 600,
           borderRadius: '24px',
           backdropFilter: 'blur(20px)',
           boxShadow: '0 8px 32px rgba(107, 33, 168, 0.08)',
@@ -220,7 +223,7 @@ const Dashboard = ({ instructor, onLogout }) => {
         }}>
           {!showHistory && !selectedClass && (
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
-              <div 
+              <div
                 className="dashboard-title-container"
                 style={{
                   backgroundImage: `url(${process.env.PUBLIC_URL}/siit-lec-room.jpg)`,
@@ -252,7 +255,7 @@ const Dashboard = ({ instructor, onLogout }) => {
                     Select a class to manage attendance or view attendance history
                   </Text>
                   <div style={{ marginTop: '20px' }}>
-                    <Button 
+                    <Button
                       type="primary"
                       size="large"
                       onClick={handleViewHistory}
@@ -279,15 +282,15 @@ const Dashboard = ({ instructor, onLogout }) => {
                       onClick={() => handleClassSelect(classItem)}
                     >
                       <div style={{ marginBottom: '16px' }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
                           alignItems: 'flex-start',
                           marginBottom: '12px'
                         }}>
-                          <Tag 
+                          <Tag
                             color={classItem.color}
-                            style={{ 
+                            style={{
                               fontSize: '14px',
                               fontWeight: 600,
                               padding: '4px 12px',
@@ -296,9 +299,9 @@ const Dashboard = ({ instructor, onLogout }) => {
                           >
                             {classItem.code}
                           </Tag>
-                          <Tag 
+                          <Tag
                             color={getDayColor(classItem.day)}
-                            style={{ 
+                            style={{
                               fontSize: '12px',
                               fontWeight: 500,
                               padding: '2px 8px',
@@ -308,10 +311,10 @@ const Dashboard = ({ instructor, onLogout }) => {
                             {classItem.day}
                           </Tag>
                         </div>
-                        
-                        <Title 
-                          level={4} 
-                          style={{ 
+
+                        <Title
+                          level={4}
+                          style={{
                             margin: '0 0 16px 0',
                             color: '#000',
                             fontSize: '16px',
@@ -337,14 +340,14 @@ const Dashboard = ({ instructor, onLogout }) => {
                         </div>
                       </Space>
 
-                      <div style={{ 
-                        marginTop: '16px', 
+                      <div style={{
+                        marginTop: '16px',
                         padding: '12px',
                         background: `${classItem.color}10`,
                         borderRadius: '8px',
                         textAlign: 'center'
                       }}>
-                        <Text style={{ 
+                        <Text style={{
                           color: classItem.color,
                           fontSize: '14px',
                           fontWeight: 600
@@ -361,11 +364,11 @@ const Dashboard = ({ instructor, onLogout }) => {
 
           {selectedClass && !showHistory && (
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '24px' 
+                marginBottom: '24px'
               }}>
                 <div>
                   <Title level={2} style={{ margin: 0, color: '#000' }}>
@@ -382,24 +385,24 @@ const Dashboard = ({ instructor, onLogout }) => {
                 </Button>
               </div>
 
-              <SessionManager 
-                onSessionChange={handleSessionChange} 
+              <SessionManager
+                onSessionChange={handleSessionChange}
                 selectedClass={selectedClass}
               />
-              
+
               <Divider />
-              
+
               <AttendanceList session={currentSession} />
             </Space>
           )}
 
           {showHistory && (
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '24px' 
+                marginBottom: '24px'
               }}>
                 <Title level={2} style={{ margin: 0, color: '#000' }}>
                   Attendance History
@@ -408,7 +411,7 @@ const Dashboard = ({ instructor, onLogout }) => {
                   ← Back to Classes
                 </Button>
               </div>
-              
+
               <AttendanceHistory classes={instructorClasses} />
             </Space>
           )}
@@ -416,7 +419,7 @@ const Dashboard = ({ instructor, onLogout }) => {
       </Content>
 
       <Footer style={{ textAlign: 'center' }}>
-        <Text style={{ 
+        <Text style={{
           color: 'rgba(255, 255, 255, 0.8)',
           fontSize: '14px',
           fontWeight: '500'
@@ -424,7 +427,7 @@ const Dashboard = ({ instructor, onLogout }) => {
           Digital Attendance System ©2025 - Academic Capstone Project
         </Text>
         <br />
-        <Text style={{ 
+        <Text style={{
           color: 'rgba(255, 255, 255, 0.6)',
           fontSize: '12px'
         }}>
