@@ -1,193 +1,156 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, ScrollView, ActivityIndicator } from 'react-native';
-import { beaconService } from '../services/beaconService';
-import { attendanceAPI } from '../services/api';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image, Platform, Alert } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-export default function Classroom({ route }) {
-  const { params } = route;
-  const [isCheckingIn, setIsCheckingIn] = useState(false);
+// Web-safe alert function
+const showAlert = (title, message) => {
+  if (Platform.OS === 'web') {
+    alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+};
+
+export default function Classroom() {
+  const params = useLocalSearchParams();
+  const router = useRouter();
+  const [checkInHistory, setCheckInHistory] = useState([]);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [attendanceHistory, setAttendanceHistory] = useState([]);
-  const [studentId, setStudentId] = useState('');
-  
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  
-  const courseData = {
-    code: params.code,
-    name: params.name,
-    date: currentDate,
-    time: params.time,
-    day: params.day,
-    room: params.room,
-    uuid: params.uuid
+
+  // Course details from navigation params
+  const courseCode = params.code || 'N/A';
+  const courseName = params.name || 'Course Name';
+  const courseDay = params.day || 'N/A';
+  const courseTime = params.time || 'N/A';
+  const courseRoom = params.room || 'N/A';
+
+  const handleCheckIn = () => {
+    const now = new Date();
+    const date = now.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const time = now.toLocaleTimeString('th-TH', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+
+    // Add new check-in record
+    const newRecord = {
+      date,
+      time,
+      id: Date.now()
+    };
+
+    setCheckInHistory([newRecord, ...checkInHistory]);
+    setIsCheckedIn(true);
+
+    showAlert('Success', 'Check-in completed successfully!');
+
+    // Reset check-in status after 5 seconds
+    setTimeout(() => {
+      setIsCheckedIn(false);
+    }, 5000);
   };
 
-  useEffect(() => {
-    loadStudentData();
-  }, []);
-
-  const loadStudentData = async () => {
-    try {
-      const id = await attendanceAPI.getStoredStudentId();
-      setStudentId(id);
-      // Load attendance history for this student and course
-      loadAttendanceHistory(id);
-    } catch (error) {
-      console.error('Error loading student data:', error);
-    }
-  };
-
-  const loadAttendanceHistory = (id) => {
-    // Mock attendance history - replace with actual API call
-    const mockHistory = [
-      { studentId: id, date: 'November 6, 2025', time: '09:15 AM' },
-      { studentId: id, date: 'November 8, 2025', time: '09:12 AM' },
-      { studentId: id, date: 'October 30, 2025', time: '09:18 AM' }
-    ];
-    setAttendanceHistory(mockHistory);
-  };
-
-  const handleCheckIn = async () => {
-    setIsCheckingIn(true);
-    try {
-      // Scan for beacon
-      const beaconResult = await beaconService.simulateBeaconScan();
-      
-      if (!beaconResult.success) {
-        Alert.alert(
-          'Beacon Not Found',
-          'No classroom beacon detected. Please make sure you are in the classroom.',
-          [{ text: 'OK' }]
-        );
-        setIsCheckingIn(false);
-        return;
-      }
-
-      // Check if UUID matches
-      const scannedUUID = beaconResult.beacon.uuid;
-      if (scannedUUID !== courseData.uuid) {
-        const wrongClassroom = beaconResult.beacon.classroom;
-        Alert.alert(
-          'Wrong Classroom',
-          `Please attend ${courseData.name} at ${courseData.room}`,
-          [{ text: 'OK' }]
-        );
-        setIsCheckingIn(false);
-        return;
-      }
-
-      // Perform check-in
-      const checkInResult = await attendanceAPI.checkIn({
-        student_id: studentId,
-        beacon_uuid: scannedUUID
-      });
-
-      if (checkInResult.success) {
-        Alert.alert(
-          'Success',
-          'Check-in Complete',
-          [{ text: 'OK' }]
-        );
-        setIsCheckedIn(true);
-        // Add new attendance record
-        const newRecord = {
-          studentId: studentId,
-          date: currentDate,
-          time: new Date().toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })
-        };
-        setAttendanceHistory([newRecord, ...attendanceHistory]);
-      } else {
-        Alert.alert(
-          'Check-in Failed',
-          checkInResult.message || 'Unable to complete check-in',
-          [{ text: 'OK' }]
-        );
-      }
-    } catch (error) {
-      console.error('Check-in error:', error);
-      Alert.alert(
-        'Error',
-        'An error occurred during check-in. Please try again.',
-        [{ text: 'OK' }]
-      );
-    } finally {
-      setIsCheckingIn(false);
-    }
+  const handleBack = () => {
+    router.back();
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
         <View style={styles.headerLeft}>
-          <Image source={require('../assets/siitlogo.png')} style={styles.headerLogo} resizeMode="contain" />
+          {Platform.OS !== 'web' && (
+            <Image source={require('../assets/siitlogo.png')} style={styles.headerLogo} resizeMode="contain" />
+          )}
           <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>{courseData.code}</Text>
-            <Text style={styles.headerSubtitle}>{courseData.name}</Text>
+            <Text style={styles.headerTitle}>{courseCode}</Text>
+            <Text style={styles.headerSubtitle}>{courseName}</Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.classSection}>
+      <ScrollView style={styles.content}>
+        {/* Course Information Card */}
         <View style={styles.infoCard}>
+          <Text style={styles.sectionTitle}>Course Information</Text>
+          
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Course Code:</Text>
-            <Text style={styles.value}>{courseData.code}</Text>
+            <Text style={styles.infoLabel}>Course Code:</Text>
+            <Text style={styles.infoValue}>{courseCode}</Text>
           </View>
+
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Course Name:</Text>
-            <Text style={styles.value}>{courseData.name}</Text>
+            <Text style={styles.infoLabel}>Course Name:</Text>
+            <Text style={styles.infoValue}>{courseName}</Text>
           </View>
+
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Date:</Text>
-            <Text style={styles.value}>{courseData.date}</Text>
+            <Text style={styles.infoLabel}>Day:</Text>
+            <Text style={styles.infoValue}>{courseDay}</Text>
           </View>
+
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Time:</Text>
-            <Text style={styles.value}>{courseData.time}</Text>
+            <Text style={styles.infoLabel}>Time:</Text>
+            <Text style={styles.infoValue}>{courseTime}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Room:</Text>
+            <Text style={styles.infoValue}>{courseRoom}</Text>
           </View>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.checkInButton, isCheckingIn && styles.checkInButtonDisabled]} 
+        {/* Check-in Button */}
+        <TouchableOpacity
+          style={[styles.checkInButton, isCheckedIn && styles.checkInButtonDisabled]}
           onPress={handleCheckIn}
-          disabled={isCheckingIn}
+          disabled={isCheckedIn}
         >
-          {isCheckingIn ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator color="#fff" />
-              <Text style={styles.checkInButtonText}>Scanning for Beacon...</Text>
-            </View>
-          ) : (
-            <Text style={styles.checkInButtonText}>Check In</Text>
-          )}
+          <Text style={styles.checkInButtonText}>
+            {isCheckedIn ? '✓ Checked In' : 'Check In'}
+          </Text>
         </TouchableOpacity>
 
-        {attendanceHistory.length > 0 && (
-          <View style={styles.historySection}>
-            <Text style={styles.historyTitle}>Attendance History</Text>
+        {/* Check-in History Table */}
+        {checkInHistory.length > 0 && (
+          <View style={styles.historyCard}>
+            <Text style={styles.sectionTitle}>Check-in History</Text>
+            
             <View style={styles.table}>
+              {/* Table Header */}
               <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderText, styles.tableColStudent]}>Student ID</Text>
-                <Text style={[styles.tableHeaderText, styles.tableColDate]}>Date</Text>
+                <Text style={[styles.tableHeaderText, styles.dateColumn]}>Date</Text>
+                <Text style={[styles.tableHeaderText, styles.timeColumn]}>Time</Text>
               </View>
-              {attendanceHistory.map((record, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={[styles.tableCell, styles.tableColStudent]}>{record.studentId}</Text>
-                  <Text style={[styles.tableCell, styles.tableColDate]}>{record.date}</Text>
+
+              {/* Table Rows */}
+              {checkInHistory.map((record) => (
+                <View key={record.id} style={styles.tableRow}>
+                  <Text style={[styles.tableCell, styles.dateColumn]}>{record.date}</Text>
+                  <Text style={[styles.tableCell, styles.timeColumn]}>{record.time}</Text>
                 </View>
               ))}
             </View>
           </View>
         )}
-      </View>
-    </ScrollView>
+
+        {checkInHistory.length === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No check-ins yet</Text>
+            <Text style={styles.emptyStateSubtext}>Press the Check In button above to record your attendance</Text>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -202,130 +165,167 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.12)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  },
+  backButton: {
+    marginBottom: 12,
+    paddingVertical: 4,
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  headerLogo: {
+    width: 56,
+    height: 56,
+    marginRight: 12,
+  },
+  headerText: {
+    flexDirection: 'column',
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  headerLogo: {
-    width: 40,
-    height: 40,
-    marginRight: 12,
-  },
-  headerText: {
-    justifyContent: 'center',
+    flex: 1,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    color: '#FFFFFF',
+    opacity: 0.9,
   },
-  classSection: {
+  content: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: 16,
+    backgroundColor: 'rgba(114, 47, 135, 0.7)',
+    paddingTop: 16,
   },
   infoCard: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
+    margin: 16,
     padding: 20,
-    marginBottom: 24,
-    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#722F87',
+    marginBottom: 16,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+    borderBottomColor: '#f0f0f0',
   },
-  label: {
-    fontSize: 16,
+  infoLabel: {
+    fontSize: 14,
     color: '#666',
-    fontWeight: '500',
-  },
-  value: {
-    fontSize: 16,
-    color: '#333',
     fontWeight: '600',
   },
+  infoValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
+  },
   checkInButton: {
-    backgroundColor: '#722f87',
+    backgroundColor: '#BE1E2D',
     borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
     padding: 16,
     alignItems: 'center',
-    marginTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   checkInButtonDisabled: {
-    opacity: 0.6,
+    backgroundColor: '#4CAF50',
+    opacity: 0.8,
   },
   checkInButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  historySection: {
-    marginTop: 32,
-  },
-  historyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
+  historyCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    margin: 16,
+    marginTop: 8,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   table: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#ddd',
+    borderRadius: 8,
     overflow: 'hidden',
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#722f87',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    backgroundColor: '#722F87',
+    padding: 12,
   },
   tableHeaderText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFFFFF',
     fontWeight: 'bold',
+    fontSize: 14,
   },
   tableRow: {
     flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    backgroundColor: '#FFFFFF',
   },
   tableCell: {
     fontSize: 14,
     color: '#333',
   },
-  tableColStudent: {
-    flex: 1,
+  dateColumn: {
+    flex: 2,
   },
-  tableColDate: {
-    flex: 1.5,
+  timeColumn: {
+    flex: 1,
+    textAlign: 'right',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
   },
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const classes = [
@@ -87,7 +87,9 @@ export default function Home() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Image source={require('../assets/siitlogo.png')} style={styles.headerLogo} resizeMode="contain" />
+          {Platform.OS !== 'web' && (
+            <Image source={require('../assets/siitlogo.png')} style={styles.headerLogo} resizeMode="contain" />
+          )}
           <View style={styles.headerText}>
             <Text style={styles.headerTitle}>My Classes</Text>
             <Text style={styles.headerSubtitle}>Fall Semester 2025</Text>
