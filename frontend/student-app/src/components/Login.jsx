@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  Image, 
-  ImageBackground, 
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ImageBackground,
   Platform,
   KeyboardAvoidingView,
   ScrollView,
-  Alert
-} from 'react-native';
-import { router } from 'expo-router';
+  Alert,
+} from "react-native";
+import { router } from "expo-router";
 
 // Web-safe alert function
 const showAlert = (title, message) => {
-  if (Platform.OS === 'web') {
+  if (Platform.OS === "web") {
     alert(`${title}\n\n${message}`);
   } else {
     Alert.alert(title, message);
@@ -24,55 +24,86 @@ const showAlert = (title, message) => {
 };
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // Validate inputs
     if (!email || !password) {
-      showAlert('Error', 'Please enter both email and password');
+      showAlert("Error", "Please enter both email and password");
       return;
     }
 
     // Validate SIIT email
-    if (!email.endsWith('@g.siit.tu.ac.th') && !email.endsWith('@siit.tu.ac.th')) {
-      showAlert('Invalid Email', 'Please use your SIIT email address');
+    if (
+      !email.endsWith("@g.siit.tu.ac.th") &&
+      !email.endsWith("@siit.tu.ac.th")
+    ) {
+      showAlert("Invalid Email", "Please use your SIIT email address");
       return;
     }
 
     setLoading(true);
-    // Simulate login (replace with actual API call)
-    setTimeout(() => {
+
+    try {
+      // Extract student ID from email (e.g., 6522781713@g.siit.tu.ac.th)
+      const studentId = email.split("@")[0];
+
+      // ========== REAL API CALL TO BACKEND ==========
+      const response = await fetch("http://192.168.1.154:5000/api/user/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: studentId,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("Login successful:", data.student);
+        showAlert("Welcome", `Hello, ${data.student.name}!`);
+        router.replace("/home");
+      } else {
+        showAlert("Login Failed", data.message || "Invalid credentials");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      showAlert(
+        "Error",
+        "Network error. Please check your connection and try again."
+      );
+    } finally {
       setLoading(false);
-      router.replace('/home');
-    }, 500);
+    }
   };
 
   const handleSignupPress = () => {
-    router.push('/signup');
+    router.push("/signup");
   };
 
   // For web compatibility - check if assets exist
-  const hasAssets = Platform.OS !== 'web';
+  const hasAssets = Platform.OS !== "web";
 
   // Safe image loader
   let backgroundImage, logoImage;
   try {
     if (hasAssets) {
-      backgroundImage = require('../assets/SIIT_Main_Building.jpg');
-      logoImage = require('../assets/siitlogo.png');
+      backgroundImage = require("../assets/SIIT_Main_Building.jpg");
+      logoImage = require("../assets/siitlogo.png");
     }
   } catch (error) {
-    console.log('Error loading images:', error);
+    console.log("Error loading images:", error);
   }
 
   const renderContent = () => (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.keyboardView}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
@@ -124,7 +155,7 @@ export default function Login() {
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Signing in...' : 'Login'}
+              {loading ? "Signing in..." : "Login"}
             </Text>
           </TouchableOpacity>
 
@@ -147,9 +178,7 @@ export default function Login() {
           style={styles.backgroundImage}
           resizeMode="cover"
         >
-          <View style={styles.overlay}>
-            {renderContent()}
-          </View>
+          <View style={styles.overlay}>{renderContent()}</View>
         </ImageBackground>
       ) : (
         <View style={[styles.overlay, styles.webBackground]}>
@@ -169,30 +198,30 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(114, 47, 135, 0.7)', // SIIT Purple color with opacity
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(114, 47, 135, 0.7)", // SIIT Purple color with opacity
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
   webBackground: {
-    backgroundColor: '#722F87', // SIIT Purple color (solid for web)
+    backgroundColor: "#722F87", // SIIT Purple color (solid for web)
   },
   keyboardView: {
     flex: 1,
-    width: '100%',
+    width: "100%",
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerContainer: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     padding: 30,
     borderRadius: 15,
     marginBottom: 30,
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
   },
   logo: {
@@ -202,19 +231,19 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
-    color: '#722F87', // SIIT Purple color
+    color: "#722F87", // SIIT Purple color
   },
   subtitle: {
     fontSize: 18,
-    color: '#722F87', // SIIT Purple color
+    color: "#722F87", // SIIT Purple color
     opacity: 0.8,
   },
   formContainer: {
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     padding: 30,
     borderRadius: 15,
   },
@@ -223,27 +252,27 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#722F87',
+    fontWeight: "600",
+    color: "#722F87",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   loginButton: {
-    backgroundColor: '#BE1E2D', // SIIT Red color
+    backgroundColor: "#BE1E2D", // SIIT Red color
     padding: 15,
     borderRadius: 10,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -253,24 +282,24 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 20,
   },
   signupText: {
     fontSize: 14,
-    color: '#722F87',
+    color: "#722F87",
   },
   signupLink: {
     fontSize: 14,
-    color: '#BE1E2D',
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
+    color: "#BE1E2D",
+    fontWeight: "bold",
+    textDecorationLine: "underline",
   },
 });

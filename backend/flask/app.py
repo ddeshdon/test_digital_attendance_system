@@ -240,6 +240,105 @@ def create_app():
                 'message': f'Server error: {str(e)}'
             }), 500
 
+    @app.route('/api/user/register', methods=['POST'])
+    def register_user():
+        try:
+            data = request.get_json()
+            
+            student_id = data.get('student_id')
+            name = data.get('name')
+            email = data.get('email')
+            password = data.get('password')
+            
+            # Validate required fields
+            if not all([student_id, name, email, password]):
+                return jsonify({
+                    'success': False,
+                    'message': 'Missing required fields'
+                }), 400
+            
+            # Import Config to access MOCK_STUDENTS
+            from config import Config
+            
+            # Check if user already exists
+            if student_id in Config.MOCK_STUDENTS:
+                return jsonify({
+                    'success': False,
+                    'message': 'Student ID already registered'
+                }), 400
+            
+            # Add new user to MOCK_STUDENTS
+            Config.MOCK_STUDENTS[student_id] = {
+                'name': name,
+                'email': email,
+                'password': password  # In production, hash this!
+            }
+            
+            print(f"New user registered: {student_id} - {name}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Registration successful'
+            }), 200
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Server error: {str(e)}'
+            }), 500
+
+    @app.route('/api/user/login', methods=['POST'])
+    def login_user():
+        try:
+            data = request.get_json()
+            
+            student_id = data.get('student_id')
+            password = data.get('password')
+            
+            # Validate required fields
+            if not student_id or not password:
+                return jsonify({
+                    'success': False,
+                    'message': 'Missing student_id or password'
+                }), 400
+            
+            # Import Config to access MOCK_STUDENTS
+            from config import Config
+            
+            # Check if user exists
+            student = Config.MOCK_STUDENTS.get(student_id)
+            
+            if not student:
+                return jsonify({
+                    'success': False,
+                    'message': 'Student ID not found'
+                }), 404
+            
+            # Verify password
+            if student.get('password') != password:
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid password'
+                }), 401
+            
+            print(f"User logged in: {student_id} - {student['name']}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Login successful',
+                'student': {
+                    'student_id': student_id,
+                    'name': student['name'],
+                    'email': student['email']
+                }
+            }), 200
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Server error: {str(e)}'
+            }), 500
+
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
